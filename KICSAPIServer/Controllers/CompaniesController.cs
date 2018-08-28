@@ -25,7 +25,7 @@ namespace KICSAPIServer.Controllers
         [Authorize]
         public async Task<IActionResult> TestAPI()
         {
-            return Ok("Hello world");
+            return Ok("Banh mi");
 
         }
         [HttpGet("GetActiveCompanies")]

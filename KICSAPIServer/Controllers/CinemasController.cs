@@ -21,7 +21,7 @@ namespace KICSAPIServer.Controllers
         }
 
         [HttpGet("GetActiveCinemasForCompany")]
-       // [Authorize]
+        //[Authorize]
         public async Task<IActionResult> GetActiveCinemasForCompany(Guid companyId)
         {
 
