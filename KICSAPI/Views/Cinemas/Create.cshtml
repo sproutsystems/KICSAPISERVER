@@ -1,0 +1,205 @@
+﻿@model KICSAPI.Models.Cinema
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Create</h2>
+
+<h4>Cinema</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="CompanyId" class="control-label"></label>
+                <select asp-for="CompanyId" class ="form-control" asp-items="ViewBag.CompanyId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Address1" class="control-label"></label>
+                <input asp-for="Address1" class="form-control" />
+                <span asp-validation-for="Address1" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Address2" class="control-label"></label>
+                <input asp-for="Address2" class="form-control" />
+                <span asp-validation-for="Address2" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="City" class="control-label"></label>
+                <input asp-for="City" class="form-control" />
+                <span asp-validation-for="City" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Postcode" class="control-label"></label>
+                <input asp-for="Postcode" class="form-control" />
+                <span asp-validation-for="Postcode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Phone" class="control-label"></label>
+                <input asp-for="Phone" class="form-control" />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BookingPhone" class="control-label"></label>
+                <input asp-for="BookingPhone" class="form-control" />
+                <span asp-validation-for="BookingPhone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WebsiteUrl" class="control-label"></label>
+                <input asp-for="WebsiteUrl" class="form-control" />
+                <span asp-validation-for="WebsiteUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PointOfSaleId" class="control-label"></label>
+                <input asp-for="PointOfSaleId" class="form-control" />
+                <span asp-validation-for="PointOfSaleId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsOnlineTicketing" /> @Html.DisplayNameFor(model => model.IsOnlineTicketing)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="SessionImportEmail" class="control-label"></label>
+                <input asp-for="SessionImportEmail" class="form-control" />
+                <span asp-validation-for="SessionImportEmail" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AdministrationEmail" class="control-label"></label>
+                <input asp-for="AdministrationEmail" class="form-control" />
+                <span asp-validation-for="AdministrationEmail" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TimeZoneLocationId" class="control-label"></label>
+                <input asp-for="TimeZoneLocationId" class="form-control" />
+                <span asp-validation-for="TimeZoneLocationId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsDeleted" /> @Html.DisplayNameFor(model => model.IsDeleted)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CountryStateId" class="control-label"></label>
+                <select asp-for="CountryStateId" class ="form-control" asp-items="ViewBag.CountryStateId"></select>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsIgnoreScreenErrorsOnImport" /> @Html.DisplayNameFor(model => model.IsIgnoreScreenErrorsOnImport)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="LoyaltyPointOfSaleId" class="control-label"></label>
+                <input asp-for="LoyaltyPointOfSaleId" class="form-control" />
+                <span asp-validation-for="LoyaltyPointOfSaleId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SessionRestrictUntilTimeId" class="control-label"></label>
+                <select asp-for="SessionRestrictUntilTimeId" class ="form-control" asp-items="ViewBag.SessionRestrictUntilTimeId"></select>
+            </div>
+            <div class="form-group">
+                <label asp-for="ShortName" class="control-label"></label>
+                <input asp-for="ShortName" class="form-control" />
+                <span asp-validation-for="ShortName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FacebookPageUrl" class="control-label"></label>
+                <input asp-for="FacebookPageUrl" class="form-control" />
+                <span asp-validation-for="FacebookPageUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TwitterPageUrl" class="control-label"></label>
+                <input asp-for="TwitterPageUrl" class="form-control" />
+                <span asp-validation-for="TwitterPageUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="AppStoreUrl" class="control-label"></label>
+                <input asp-for="AppStoreUrl" class="form-control" />
+                <span asp-validation-for="AppStoreUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="GooglePlayUrl" class="control-label"></label>
+                <input asp-for="GooglePlayUrl" class="form-control" />
+                <span asp-validation-for="GooglePlayUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MovieTimesComAuUserName" class="control-label"></label>
+                <input asp-for="MovieTimesComAuUserName" class="form-control" />
+                <span asp-validation-for="MovieTimesComAuUserName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MovieTimesComAuPassword" class="control-label"></label>
+                <input asp-for="MovieTimesComAuPassword" class="form-control" />
+                <span asp-validation-for="MovieTimesComAuPassword" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MovieTimesComAuCinemaName" class="control-label"></label>
+                <input asp-for="MovieTimesComAuCinemaName" class="form-control" />
+                <span asp-validation-for="MovieTimesComAuCinemaName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MobileAppDescription" class="control-label"></label>
+                <input asp-for="MobileAppDescription" class="form-control" />
+                <span asp-validation-for="MobileAppDescription" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Latitude" class="control-label"></label>
+                <input asp-for="Latitude" class="form-control" />
+                <span asp-validation-for="Latitude" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Longitude" class="control-label"></label>
+                <input asp-for="Longitude" class="form-control" />
+                <span asp-validation-for="Longitude" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="InstagramPageUrl" class="control-label"></label>
+                <input asp-for="InstagramPageUrl" class="form-control" />
+                <span asp-validation-for="InstagramPageUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MemberTypeId" class="control-label"></label>
+                <select asp-for="MemberTypeId" class ="form-control" asp-items="ViewBag.MemberTypeId"></select>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="AllowMultipleSeatsPerTickets" /> @Html.DisplayNameFor(model => model.AllowMultipleSeatsPerTickets)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="AllowReDshieldFraudProtection" /> @Html.DisplayNameFor(model => model.AllowReDshieldFraudProtection)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

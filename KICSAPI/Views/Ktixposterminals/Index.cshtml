@@ -1,0 +1,84 @@
+﻿@model IEnumerable<KICSAPI.Models.Ktixposterminal>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.KtixDescription)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DeviceName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DeviceId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DeviceModel)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Ipaddress)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ApiendPoint)
+                </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Cinema)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Company)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.KtixPosUseType)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.KtixDescription)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DeviceName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DeviceId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DeviceModel)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Ipaddress)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ApiendPoint)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Cinema.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Company.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.KtixPosUseType.Name)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.KtixPosTerminalId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.KtixPosTerminalId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.KtixPosTerminalId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

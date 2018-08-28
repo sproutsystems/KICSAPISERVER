@@ -1,0 +1,132 @@
+﻿@model IEnumerable<KICSAPI.Models.Cmsuser>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreateDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ModifyDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Phone)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TimeZoneLocationId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsDeleted)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Mobile)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsAbleToApproveQuotes)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Pospin)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PospinexpiryDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsPosUser)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsLoggedInToPos)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.LastKtixPosTerminalId)
+                </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CmsuserType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Company)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Country)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.User)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreateDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ModifyDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Phone)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TimeZoneLocationId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsDeleted)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Mobile)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsAbleToApproveQuotes)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Pospin)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PospinexpiryDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsPosUser)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsLoggedInToPos)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LastKtixPosTerminalId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CmsuserType.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Company.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Country.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.User.LoweredUserName)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CmsuserId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CmsuserId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CmsuserId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

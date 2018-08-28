@@ -1,0 +1,84 @@
+﻿@model IEnumerable<KICSAPI.Models.Session>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.DateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PointOfSaleId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SeatsRemaining)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsOnlineTicketing)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreateDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BookingUrl)
+                </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Cinema)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MovieInstance)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Screen)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PointOfSaleId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SeatsRemaining)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsOnlineTicketing)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreateDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BookingUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Cinema.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MovieInstance.MovieInstanceId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Screen.Code)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.SessionId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.SessionId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.SessionId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

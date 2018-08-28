@@ -1,0 +1,77 @@
+﻿@model KICSAPI.Models.Session
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Edit</h2>
+
+<h4>Session</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="SessionId" />
+            <div class="form-group">
+                <label asp-for="MovieInstanceId" class="control-label"></label>
+                <select asp-for="MovieInstanceId" class="form-control" asp-items="ViewBag.MovieInstanceId"></select>
+                <span asp-validation-for="MovieInstanceId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CinemaId" class="control-label"></label>
+                <select asp-for="CinemaId" class="form-control" asp-items="ViewBag.CinemaId"></select>
+                <span asp-validation-for="CinemaId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ScreenId" class="control-label"></label>
+                <select asp-for="ScreenId" class="form-control" asp-items="ViewBag.ScreenId"></select>
+                <span asp-validation-for="ScreenId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DateTime" class="control-label"></label>
+                <input asp-for="DateTime" class="form-control" />
+                <span asp-validation-for="DateTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PointOfSaleId" class="control-label"></label>
+                <input asp-for="PointOfSaleId" class="form-control" />
+                <span asp-validation-for="PointOfSaleId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SeatsRemaining" class="control-label"></label>
+                <input asp-for="SeatsRemaining" class="form-control" />
+                <span asp-validation-for="SeatsRemaining" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsOnlineTicketing" /> @Html.DisplayNameFor(model => model.IsOnlineTicketing)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="CreateDateTime" class="control-label"></label>
+                <input asp-for="CreateDateTime" class="form-control" />
+                <span asp-validation-for="CreateDateTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="BookingUrl" class="control-label"></label>
+                <input asp-for="BookingUrl" class="form-control" />
+                <span asp-validation-for="BookingUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -1,0 +1,26 @@
+﻿using System;
+using System.Collections.Generic;
+
+namespace KICSAPI.Models
+{
+    public partial class AspnetRoles
+    {
+        public AspnetRoles()
+        {
+            AspnetUsersInRoles = new HashSet<AspnetUsersInRoles>();
+            Helpdeskcategoryroles = new HashSet<Helpdeskcategoryroles>();
+            Membertype = new HashSet<Membertype>();
+        }
+
+        public Guid ApplicationId { get; set; }
+        public Guid RoleId { get; set; }
+        public string RoleName { get; set; }
+        public string LoweredRoleName { get; set; }
+        public string Description { get; set; }
+
+        public AspnetApplications Application { get; set; }
+        public ICollection<AspnetUsersInRoles> AspnetUsersInRoles { get; set; }
+        public ICollection<Helpdeskcategoryroles> Helpdeskcategoryroles { get; set; }
+        public ICollection<Membertype> Membertype { get; set; }
+    }
+}

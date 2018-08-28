@@ -1,0 +1,121 @@
+﻿@model KICSAPI.Models.Cmsuser
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Edit</h2>
+
+<h4>Cmsuser</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="CmsuserId" />
+            <div class="form-group">
+                <label asp-for="CreateDateTime" class="control-label"></label>
+                <input asp-for="CreateDateTime" class="form-control" />
+                <span asp-validation-for="CreateDateTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ModifyDateTime" class="control-label"></label>
+                <input asp-for="ModifyDateTime" class="form-control" />
+                <span asp-validation-for="ModifyDateTime" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Phone" class="control-label"></label>
+                <input asp-for="Phone" class="form-control" />
+                <span asp-validation-for="Phone" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CompanyId" class="control-label"></label>
+                <select asp-for="CompanyId" class="form-control" asp-items="ViewBag.CompanyId"></select>
+                <span asp-validation-for="CompanyId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CountryId" class="control-label"></label>
+                <select asp-for="CountryId" class="form-control" asp-items="ViewBag.CountryId"></select>
+                <span asp-validation-for="CountryId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CmsuserTypeId" class="control-label"></label>
+                <select asp-for="CmsuserTypeId" class="form-control" asp-items="ViewBag.CmsuserTypeId"></select>
+                <span asp-validation-for="CmsuserTypeId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserId" class="control-label"></label>
+                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
+                <span asp-validation-for="UserId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TimeZoneLocationId" class="control-label"></label>
+                <input asp-for="TimeZoneLocationId" class="form-control" />
+                <span asp-validation-for="TimeZoneLocationId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsDeleted" /> @Html.DisplayNameFor(model => model.IsDeleted)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="Mobile" class="control-label"></label>
+                <input asp-for="Mobile" class="form-control" />
+                <span asp-validation-for="Mobile" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="IsAbleToApproveQuotes" class="control-label"></label>
+                <input asp-for="IsAbleToApproveQuotes" class="form-control" />
+                <span asp-validation-for="IsAbleToApproveQuotes" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Pospin" class="control-label"></label>
+                <input asp-for="Pospin" class="form-control" />
+                <span asp-validation-for="Pospin" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PospinexpiryDate" class="control-label"></label>
+                <input asp-for="PospinexpiryDate" class="form-control" />
+                <span asp-validation-for="PospinexpiryDate" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsPosUser" /> @Html.DisplayNameFor(model => model.IsPosUser)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="checkbox">
+                    <label>
+                        <input asp-for="IsLoggedInToPos" /> @Html.DisplayNameFor(model => model.IsLoggedInToPos)
+                    </label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="LastKtixPosTerminalId" class="control-label"></label>
+                <input asp-for="LastKtixPosTerminalId" class="form-control" />
+                <span asp-validation-for="LastKtixPosTerminalId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

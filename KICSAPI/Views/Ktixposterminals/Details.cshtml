@@ -1,0 +1,73 @@
+﻿@model KICSAPI.Models.Ktixposterminal
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Ktixposterminal</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.KtixDescription)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.KtixDescription)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.DeviceName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.DeviceName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.DeviceId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.DeviceId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.DeviceModel)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.DeviceModel)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Ipaddress)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Ipaddress)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ApiendPoint)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ApiendPoint)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Cinema)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Cinema.Address1)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Company)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Company.Address1)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.KtixPosUseType)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.KtixPosUseType.Name)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.KtixPosTerminalId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

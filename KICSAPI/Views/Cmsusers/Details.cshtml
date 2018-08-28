@@ -1,0 +1,121 @@
+﻿@model KICSAPI.Models.Cmsuser
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>Cmsuser</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.CreateDateTime)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.CreateDateTime)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ModifyDateTime)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ModifyDateTime)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Phone)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Phone)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.TimeZoneLocationId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.TimeZoneLocationId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IsDeleted)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IsDeleted)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Mobile)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Mobile)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IsAbleToApproveQuotes)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IsAbleToApproveQuotes)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Pospin)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Pospin)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.PospinexpiryDate)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.PospinexpiryDate)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IsPosUser)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IsPosUser)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.IsLoggedInToPos)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.IsLoggedInToPos)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.LastKtixPosTerminalId)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.LastKtixPosTerminalId)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.CmsuserType)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.CmsuserType.Name)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Company)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Company.Address1)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Country)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Country.Name)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.User)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.User.LoweredUserName)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.CmsuserId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>

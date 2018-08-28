@@ -1,0 +1,306 @@
+﻿@model IEnumerable<KICSAPI.Models.Company>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Address1)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Address2)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.City)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Postcode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Phone)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.WebsiteUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CompanyNumber)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.NameForDisplay)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AdministrationEmail)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingNameOfStaff)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingAddress1)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingAddress2)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingCity)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingPostcode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingState)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingPhone)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BillingEmail)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsActive)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsBillingActive)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsDeleted)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AdditionalCinemaAdjustmentPercentage)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.CreateDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ModifyDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TimeZoneLocationId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsUpdateReleaseDateDefault)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsUpdateLabelsDefault)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsUpdatePointOfSaleTitleDefault)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SaasuContactUid)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PaymentTerms)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsMemberPurchaseHistoryAvailable)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SmssenderName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.InitialFreePeriodEndDate)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SmsratePerMessageBilledToCompany)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.MessageGearsAccountId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.MessageGearsApikey)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsSendUsingMessageGears)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsShowOverdueWarning)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsRestrictedAccess)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsApplyTestCode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.FlagCacheExpiryDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PurgeDeletedMembersAfterHowManyDays)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BulkSmscreditLimit)
+                </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Country)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CountryState)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Day)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Address2)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.City)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Postcode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Phone)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WebsiteUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CompanyNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.NameForDisplay)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AdministrationEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingNameOfStaff)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingAddress1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingAddress2)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingCity)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingPostcode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingState)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingPhone)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BillingEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsActive)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsBillingActive)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsDeleted)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AdditionalCinemaAdjustmentPercentage)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CreateDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ModifyDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TimeZoneLocationId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsUpdateReleaseDateDefault)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsUpdateLabelsDefault)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsUpdatePointOfSaleTitleDefault)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SaasuContactUid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PaymentTerms)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsMemberPurchaseHistoryAvailable)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SmssenderName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InitialFreePeriodEndDate)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SmsratePerMessageBilledToCompany)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MessageGearsAccountId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MessageGearsApikey)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsSendUsingMessageGears)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsShowOverdueWarning)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsRestrictedAccess)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsApplyTestCode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FlagCacheExpiryDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PurgeDeletedMembersAfterHowManyDays)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BulkSmscreditLimit)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Country.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CountryState.Abbreviation)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Day.Name)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CompanyId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CompanyId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CompanyId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

@@ -1,0 +1,276 @@
+﻿@model IEnumerable<KICSAPI.Models.Cinema>
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Name)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Address1)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Address2)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.City)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Postcode)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Phone)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.BookingPhone)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.WebsiteUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.PointOfSaleId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsOnlineTicketing)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SessionImportEmail)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AdministrationEmail)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TimeZoneLocationId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsDeleted)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsIgnoreScreenErrorsOnImport)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.LoyaltyPointOfSaleId)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.SessionNumberOfDaysLimit)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.IsImportSessionsAutomatically)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.ShortName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.NowShowingCacheExpiryDateTime)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.FacebookPageUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.TwitterPageUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AppStoreUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.GooglePlayUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.MovieTimesComAuUserName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.MovieTimesComAuPassword)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.MovieTimesComAuCinemaName)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.MobileAppDescription)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Latitude)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Longitude)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.InstagramPageUrl)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AllowMultipleSeatsPerTickets)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.AllowReDshieldFraudProtection)
+                </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Company)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CountryState)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Crmtype)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.InternetTicketingType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MemberType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NowShowingQueryMethod)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PointOfSaleType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SessionRestrictUntilTime)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Address2)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.City)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Postcode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Phone)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BookingPhone)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WebsiteUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PointOfSaleId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsOnlineTicketing)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SessionImportEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AdministrationEmail)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TimeZoneLocationId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsDeleted)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsIgnoreScreenErrorsOnImport)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.LoyaltyPointOfSaleId)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SessionNumberOfDaysLimit)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsImportSessionsAutomatically)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ShortName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.NowShowingCacheExpiryDateTime)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FacebookPageUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TwitterPageUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AppStoreUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GooglePlayUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MovieTimesComAuUserName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MovieTimesComAuPassword)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MovieTimesComAuCinemaName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MobileAppDescription)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Latitude)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Longitude)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InstagramPageUrl)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AllowMultipleSeatsPerTickets)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AllowReDshieldFraudProtection)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Company.Address1)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CountryState.Abbreviation)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Crmtype.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InternetTicketingType.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MemberType.CreateAccountTitle)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.NowShowingQueryMethod.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.PointOfSaleType.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SessionRestrictUntilTime.TimeId)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.CinemaId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.CinemaId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.CinemaId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
