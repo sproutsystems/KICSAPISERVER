@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using KICSAPIServer.Models;
@@ -29,7 +30,7 @@ namespace KICSAPIServer.Controllers
 
 
         [HttpGet("Login")]
-       // [Authorize]
+        // [Authorize]
         public async Task<IActionResult> Login(Guid companyId, Guid cinemaId, Int64 PIN, Guid KTixPosTerminalId)
         {
             if (PIN == 1234567812345678)
@@ -37,6 +38,7 @@ namespace KICSAPIServer.Controllers
                 //this is a super user of Kinesis
                 //get token
                 var tokenString = GenerateJSONWebToken();
+
                 var SUPERuser = new LoginDTO()
                 {
                     LoginType = "MASTER",
@@ -97,8 +99,9 @@ namespace KICSAPIServer.Controllers
                 }
                 else
                 {
-                    Cmsuser thisUser =  query.FirstOrDefault();
-                    var tokenString = GenerateJSONWebToken();
+                    Cmsuser thisUser = query.FirstOrDefault();
+
+                    var tokenString = GenerateJSONWebToken(thisUser);
 
                     var CMSuser = await query.Select(x => new LoginDTO()
                     {
@@ -130,7 +133,7 @@ namespace KICSAPIServer.Controllers
         }
 
         [HttpGet("Logout")]
-       // [Authorize]
+        // [Authorize]
         public async Task<IActionResult> Logout(Guid CMSuserId)
         {
 
@@ -189,21 +192,31 @@ namespace KICSAPIServer.Controllers
             }
         }
 
-        private string GenerateJSONWebToken()
+        private string GenerateJSONWebToken(Cmsuser user = null)
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+            var identity = GenerateClaims(user);
+            var now = DateTime.UtcNow;
 
-
-            var token = new JwtSecurityToken(null,
-              null,
-              null,
-              expires: DateTime.Now.AddDays(1),
+            var token = new JwtSecurityToken(claims: identity.Claims,
+              notBefore: now,
+              expires: now.Add(TimeSpan.FromDays(+1)),
               signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        private ClaimsIdentity GenerateClaims(Cmsuser user)
+        {
+            var userId = user == null ? string.Empty : user.Name;
 
+            IList<Claim> claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, userId),
+            };
+
+            return new ClaimsIdentity(claims, "Bearer");
+        }
     }
 }

@@ -1034,7 +1034,7 @@ namespace KICSAPIServer.Controllers
                     {
                         KtixMasterTransactionId = dto.KtixMasterTransactionId,
                         Status = true,
-                        Message = "Successfully commited booking with Payment. Awaiting to get reciept and tickets.",
+                        Message = "Successfully commited booking with Payment. Awaiting to get receipt and tickets.",
                         IsCommited = thisTransaction.IsCommited,
                         ReferenceNumber = ReferenceNumber,
                         CartId = thisTransaction.KtixTransactionCartId
