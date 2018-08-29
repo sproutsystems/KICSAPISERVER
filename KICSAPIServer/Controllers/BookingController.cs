@@ -930,112 +930,118 @@ namespace KICSAPIServer.Controllers
             var query = from p in _context.Ktixmastertransaction
                         where p.KtixMasterTransactionId == dto.KtixMasterTransactionId
                         && p.IsCommited == true
-                        && p.ReferenceNumber == null
                         select p;
             var thisTransaction = await query.FirstOrDefaultAsync();
             //if cart is valid and cart is not expired
             if (thisTransaction != null)
             {
-                if (dto.IsCash)
+                if (thisTransaction.ReferenceNumber != null && thisTransaction.ReferenceNumber.Length > 0)
                 {
-                    Ktixmasterpaymenttype newpayment = new Ktixmasterpaymenttype()
+                    return BadRequest("Booking has already been commited with Payment.");
+                }
+                else
+                {
+                    if (dto.IsCash)
+                    {
+                        Ktixmasterpaymenttype newpayment = new Ktixmasterpaymenttype()
+                        {
+                            KtixMasterTransactionId = dto.KtixMasterTransactionId,
+                            KtixPaymentTypeId = 3,
+                            CreditCardCardPaidAmount = 0,
+                            CreditCardGatewayTransactionNumber = null,
+                            IsApproved = true,
+                            BankAuthCode = null,
+                            ResponseCode = null,
+                            CreateDateTime = DateTime.Now,
+                            MerchantDate = null,
+                            CinemaPaymentGatewayId = null,
+                            CashPaidAmount = dto.MoneyRecieved,
+                            KtixGiftCardId = null,
+                            GiftCardNumber = null,
+                            GiftCardStartingBalance = null,
+                            GiftCardClosingBalance = null,
+                            GiftCardPaymentAmount = null,
+                            GiftCardValid = false,
+                            GiftCardCharged = false,
+                            CashReturnedAmount = dto.MoneyReturned
+                        };
+                        _context.Add(newpayment);
+
+                    }
+                    else if (dto.IsEftpos)
+                    {
+                        Ktixmasterpaymenttype newpayment = new Ktixmasterpaymenttype()
+                        {
+                            KtixMasterTransactionId = dto.KtixMasterTransactionId,
+                            KtixPaymentTypeId = 2,
+                            CreditCardCardPaidAmount = dto.CreditCardAmount,
+                            CreditCardGatewayTransactionNumber = null,
+                            IsApproved = true,
+                            BankAuthCode = null,
+                            ResponseCode = null,
+                            CreateDateTime = DateTime.Now,
+                            MerchantDate = null,
+                            CinemaPaymentGatewayId = null,
+                            CashPaidAmount = 0,
+                            KtixGiftCardId = null,
+                            GiftCardNumber = null,
+                            GiftCardStartingBalance = null,
+                            GiftCardClosingBalance = null,
+                            GiftCardPaymentAmount = null,
+                            GiftCardValid = false,
+                            GiftCardCharged = false,
+                            CashReturnedAmount = null
+                        };
+                        _context.Add(newpayment);
+
+                    }
+                    else if (dto.IsGiftCard)
+                    {
+                        Ktixmasterpaymenttype newpayment = new Ktixmasterpaymenttype()
+                        {
+                            KtixMasterTransactionId = dto.KtixMasterTransactionId,
+                            KtixPaymentTypeId = 4,
+                            CreditCardCardPaidAmount = 0,
+                            CreditCardGatewayTransactionNumber = null,
+                            IsApproved = true,
+                            BankAuthCode = null,
+                            ResponseCode = null,
+                            CreateDateTime = DateTime.Now,
+                            MerchantDate = null,
+                            CinemaPaymentGatewayId = null,
+                            CashPaidAmount = null,
+                            KtixGiftCardId = null,
+                            GiftCardNumber = dto.GiftCardNumber,
+                            GiftCardStartingBalance = null,
+                            GiftCardClosingBalance = null,
+                            GiftCardPaymentAmount = null,
+                            GiftCardValid = false,
+                            GiftCardCharged = false,
+                            CashReturnedAmount = null
+                        };
+                        _context.Add(newpayment);
+
+                    }
+
+                    //generate a master transaction refernce number.
+                    string ReferenceNumber = String.Format("{0:d9}", (DateTime.Now.Ticks / 10) % 1000000000);
+
+                    thisTransaction.ReferenceNumber = ReferenceNumber;
+                    _context.Update(thisTransaction);
+
+                    _context.SaveChanges();
+                    MyMasterTransactionDTO MyTransaction = new MyMasterTransactionDTO()
                     {
                         KtixMasterTransactionId = dto.KtixMasterTransactionId,
-                        KtixPaymentTypeId = 3,
-                        CreditCardCardPaidAmount = 0,
-                        CreditCardGatewayTransactionNumber = null,
-                        IsApproved = true,
-                        BankAuthCode = null,
-                        ResponseCode = null,
-                        CreateDateTime = DateTime.Now,
-                        MerchantDate = null,
-                        CinemaPaymentGatewayId = null,
-                        CashPaidAmount = dto.MoneyRecieved,
-                        KtixGiftCardId = null,
-                        GiftCardNumber = null,
-                        GiftCardStartingBalance = null,
-                        GiftCardClosingBalance = null,
-                        GiftCardPaymentAmount = null,
-                        GiftCardValid = false,
-                        GiftCardCharged = false,
-                        CashReturnedAmount = dto.MoneyReturned
+                        Status = true,
+                        Message = "Successfully commited booking with Payment. Awaiting to get reciept and tickets.",
+                        IsCommited = thisTransaction.IsCommited,
+                        ReferenceNumber = ReferenceNumber,
+                        CartId = thisTransaction.KtixTransactionCartId
+
                     };
-                    _context.Add(newpayment);
-
+                    return Ok(MyTransaction);
                 }
-                else if (dto.IsEftpos)
-                {
-                    Ktixmasterpaymenttype newpayment = new Ktixmasterpaymenttype()
-                    {
-                        KtixMasterTransactionId = dto.KtixMasterTransactionId,
-                        KtixPaymentTypeId = 2,
-                        CreditCardCardPaidAmount = dto.CreditCardAmount,
-                        CreditCardGatewayTransactionNumber = null,
-                        IsApproved = true,
-                        BankAuthCode = null,
-                        ResponseCode = null,
-                        CreateDateTime = DateTime.Now,
-                        MerchantDate = null,
-                        CinemaPaymentGatewayId = null,
-                        CashPaidAmount = 0,
-                        KtixGiftCardId = null,
-                        GiftCardNumber = null,
-                        GiftCardStartingBalance = null,
-                        GiftCardClosingBalance = null,
-                        GiftCardPaymentAmount = null,
-                        GiftCardValid = false,
-                        GiftCardCharged = false,
-                        CashReturnedAmount = null
-                    };
-                    _context.Add(newpayment);
-
-                }
-                else if (dto.IsGiftCard)
-                {
-                    Ktixmasterpaymenttype newpayment = new Ktixmasterpaymenttype()
-                    {
-                        KtixMasterTransactionId = dto.KtixMasterTransactionId,
-                        KtixPaymentTypeId = 4,
-                        CreditCardCardPaidAmount = 0,
-                        CreditCardGatewayTransactionNumber = null,
-                        IsApproved = true,
-                        BankAuthCode = null,
-                        ResponseCode = null,
-                        CreateDateTime = DateTime.Now,
-                        MerchantDate = null,
-                        CinemaPaymentGatewayId = null,
-                        CashPaidAmount = null,
-                        KtixGiftCardId = null,
-                        GiftCardNumber = dto.GiftCardNumber,
-                        GiftCardStartingBalance = null,
-                        GiftCardClosingBalance = null,
-                        GiftCardPaymentAmount = null,
-                        GiftCardValid = false,
-                        GiftCardCharged = false,
-                        CashReturnedAmount = null
-                    };
-                    _context.Add(newpayment);
-
-                }
-
-                //generate a master transaction refernce number.
-                string ReferenceNumber = String.Format("{0:d9}", (DateTime.Now.Ticks / 10) % 1000000000);
-
-                thisTransaction.ReferenceNumber = ReferenceNumber;
-                _context.Update(thisTransaction);
-
-                _context.SaveChanges();
-                MyMasterTransactionDTO MyTransaction = new MyMasterTransactionDTO()
-                {
-                    KtixMasterTransactionId = dto.KtixMasterTransactionId,
-                    Status = true,
-                    Message = "Successfully commited booking with Payment. Awaiting to get reciept and tickets.",
-                    IsCommited = thisTransaction.IsCommited,
-                    ReferenceNumber = ReferenceNumber,
-                    CartId = thisTransaction.KtixTransactionCartId
-
-                };
-                return Ok(MyTransaction);
             }
             else
             {

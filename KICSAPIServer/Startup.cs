@@ -37,13 +37,15 @@ namespace KICSAPIServer
                .AddJwtBearer(options =>
                {
                    var keyByteArray = Encoding.ASCII.GetBytes(Configuration["Jwt:Key"]);
-                    var signingKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(keyByteArray);
+                   var signingKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(keyByteArray);
 
                    options.TokenValidationParameters = new TokenValidationParameters
                    {
-                      ValidateLifetime = true,
-                      ValidateIssuerSigningKey = true,
-                      IssuerSigningKey = signingKey
+                       ValidateAudience = false,
+                       ValidateIssuer = false,
+                       ValidateLifetime = true,
+                       ValidateIssuerSigningKey = true,
+                       IssuerSigningKey = signingKey
                    };
                });
 
