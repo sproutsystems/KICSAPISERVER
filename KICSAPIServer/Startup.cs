@@ -36,7 +36,7 @@ namespace KICSAPIServer
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                .AddJwtBearer(options =>
                {
-                   var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]));
+                   var signingKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration.GetSection("Jwt:Key").Value));
 
                    options.TokenValidationParameters = new TokenValidationParameters
                    {
@@ -44,6 +44,8 @@ namespace KICSAPIServer
                        ValidateAudience = false,
                        ValidateLifetime = true,
                        ValidateIssuerSigningKey = true,
+                       //ValidIssuer = Configuration.GetSection("Jwt:Issuer").Value,
+                       //ValidAudience = Configuration.GetSection("Jwt:Issuer").Value
                        IssuerSigningKey = signingKey
                    };
                });

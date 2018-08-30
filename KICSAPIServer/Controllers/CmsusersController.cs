@@ -194,7 +194,7 @@ namespace KICSAPIServer.Controllers
 
         private string GenerateJSONWebToken(Cmsuser user = null)
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config.GetSection("Jwt:Key").Value));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var identity = GenerateClaims(user);
             var now = DateTime.UtcNow;
