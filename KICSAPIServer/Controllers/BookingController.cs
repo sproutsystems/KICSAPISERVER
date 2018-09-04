@@ -392,9 +392,6 @@ namespace KICSAPIServer.Controllers
             }
         }
 
-
-
-
         [HttpGet("GetCartItemsByCartId")]
         // [Authorize]
         public async Task<IActionResult> GetCartItemsByCartId(long cartId)
