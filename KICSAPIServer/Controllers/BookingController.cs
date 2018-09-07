@@ -1285,5 +1285,165 @@ namespace KICSAPIServer.Controllers
                 return BadRequest("Booking not found.");
             }
         }
+
+
+
+
+
+        [HttpPost("GetListOfSessionsForBooking")]
+        public async Task<IActionResult> GetListOfSessionsForBooking(String ReferenceNumber, Guid KtixSettingId)
+        {
+            var sessionList = new List<Ktixsession>();
+            var result = new List<SessionsByCinemaDTO>();
+
+            var sessionQ = from s in _context.Ktixsession
+                           .Where(s => s.KtixPriceGroup.KtixSettingId == KtixSettingId
+                           && s.IsCancelled == false
+                           && s.IsActive == true
+                           && s.Session.DateTime > DateTime.Now.AddHours(1))
+                           .Include("Session.Cinema")
+                           .Include("Session.Screen")
+                           .Include("Session.Sessionflags")
+                           .Include("Session.Sessionflags.Flag")
+                           .Include("Session.MovieInstance")
+                           .Include("Session.MovieInstance.MovieDetail")
+                           .Include("Session.MovieInstance.MovieDetail.Movie")
+                           .Include("Session.MovieInstance.MovieDetail.Rating")
+                           .Include("KtixPriceGroup")
+                           orderby s.Session.CreateDateTime
+                           select s;
+
+            var sessionR = await sessionQ.ToListAsync();
+
+            var query = from p in _context.Ktixmastertransaction
+                          .Where(p => p.ReferenceNumber == ReferenceNumber
+                        && p.IsRefunded == false
+                        && p.IsCommited == true
+                        && p.KtixBookingId != null
+                        && p.KtixTransactionCartId != null)
+                            .Include("KtixTransactionCart")
+                        select p.KtixBooking;
+            var thisKtixBooking = await query.FirstOrDefaultAsync();
+
+            if (thisKtixBooking != null)
+            {
+                var saleitemlistQ = from s in _context.Ktixbookingsaleitems
+                                    where s.KtixBookingId == thisKtixBooking.KtixBookingId
+                                    select s;
+                var saleItemlistR = await saleitemlistQ.Distinct().ToListAsync();
+
+                foreach (var thissaleitem in saleItemlistR)
+                {
+                    var temp = from s in _context.Ktixbookingsaleitems
+                               where s.KtixBookingId == thisKtixBooking.KtixBookingId
+                               select s;
+                    var numberOfItemsInBooking = await temp.CountAsync();
+
+                    foreach (var thisSession in sessionR)
+                    {
+
+                        //logic to make sure its valid for the tickets or items in the original booking.
+
+                        if (thisKtixBooking.KtixSessionId != thisSession.KtixSessionId || thisSession.KtixPriceGroup.IsAllowTransferDestination == true)
+                        {
+                            result.Add(new SessionsByCinemaDTO()
+                            {
+                                SessionId = thisSession.Session.SessionId,
+                                CinemaId = thisSession.Session.CinemaId,
+                                SessionDateTime = thisSession.Session.DateTime,
+                                DayOfWeek = thisSession.Session.DateTime.DayOfWeek.ToString(),
+                                CinemaName = thisSession.Session.Cinema.Name,
+                                ScreenName = thisSession.Session.Screen.Name,
+                                MovieTitle = thisSession.Session.MovieInstance.MovieDetail.Title,
+                                KTixPriceGroupId = thisSession.KtixPriceGroupId,
+                                PriceGroup = thisSession.KtixPriceGroup.Name,
+                                PosterURL = "",
+                                RunningTimeInMin = thisSession.Session.MovieInstance.MovieDetail.RunningTime.ToString(),
+                                RatingName = thisSession.Session.MovieInstance.MovieDetail.Rating.Name,
+                                IsCancelled = thisSession.IsCancelled,
+                                IsSoldOut = false,
+                                Codes = ""
+                            });
+                        }
+
+
+                    }
+                }
+                return Ok(result);
+            }
+            else
+            {
+                return BadRequest("Booking not found.");
+            }
+        }
+
+
+        [HttpPost("ChangeBooking")]
+        public async Task<IActionResult> ChangeBooking(String ReferenceNumber, long newSessionId)
+        {
+            var query = from p in _context.Ktixmastertransaction
+                          .Where(p => p.ReferenceNumber == ReferenceNumber
+                        && p.IsRefunded == false
+                        && p.IsCommited == true
+                        && p.KtixBookingId != null
+                        && p.KtixTransactionCartId != null)
+                        select p;
+            var ThisTransaction = await query.FirstOrDefaultAsync();
+
+            if (ThisTransaction != null)
+            {
+                var newKtixsessionQ = from s in _context.Ktixsession
+                      .Where(s => s.SessionId == newSessionId)
+                      .Include("Session")
+                      .Include("Session.MovieInstance")
+                      .Include("Session.MovieInstance.MovieDetail")
+                      .Include("Session.MovieInstance.MovieDetail.Movie")
+                                      select s;
+                var thisKtixSession = await newKtixsessionQ.FirstOrDefaultAsync();
+
+                var bookingQ = from b in _context.Ktixbooking
+                               where b.KtixBookingId == ThisTransaction.KtixBookingId
+                               select b;
+                var bookingR = await bookingQ.FirstOrDefaultAsync();
+                if (bookingR != null)
+                {
+                    bookingR.KtixSessionId = thisKtixSession.KtixSessionId;
+                    bookingR.SessionId = thisKtixSession.SessionId;
+                    bookingR.SessionDateTime = thisKtixSession.Session.DateTime;
+                    bookingR.MovieTitle = thisKtixSession.Session.MovieInstance.MovieDetail.Title;
+                    bookingR.CinemaId = thisKtixSession.Session.CinemaId;
+                    bookingR.IsReceiptSent = false;
+                    _context.Update(bookingR);
+                    _context.SaveChanges();
+
+
+
+                }
+
+                //update cart
+                var temp = from t in _context.Ktixtransactioncartitems
+                           where t.KtixTransactionCartId == ThisTransaction.KtixTransactionCartId
+                           && t.KtixPriceGroupSaleItemId != null
+                           && t.SessionId != null
+                           select t;
+                var cartItems = await temp.ToListAsync();
+                foreach (var item in cartItems)
+                {
+                    item.SessionId = thisKtixSession.SessionId;
+                    _context.Update(item);
+                    _context.SaveChanges();
+                }
+
+                string SessionAsString = thisKtixSession.Session.MovieInstance.MovieDetail.Movie.Title + ", " + thisKtixSession.Session.DateTime.ToString("dd/mm/yyyy") + " " + thisKtixSession.Session.DateTime.ToShortTimeString();
+
+
+                return Ok("Session has been changed to " + SessionAsString);
+            }
+            else
+            {
+                return BadRequest("Booking not found.");
+            }
+
+        }
     }
 }
