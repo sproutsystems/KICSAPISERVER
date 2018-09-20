@@ -1293,6 +1293,7 @@ namespace KICSAPIServer.Controllers
             var sessionList = new List<Ktixsession>();
             var result = new List<SessionsByCinemaDTO>();
 
+            //get list of all avaliable sessions that is not cancelled , still active and is greater than now by 1 hour.
             var sessionQ = from s in _context.Ktixsession
                            .Where(s => s.KtixPriceGroup.KtixSettingId == KtixSettingId
                            && s.IsCancelled == false
@@ -1312,6 +1313,9 @@ namespace KICSAPIServer.Controllers
 
             var sessionR = await sessionQ.ToListAsync();
 
+
+            // Get the master transaction record based on the reference number which has a session(ktixbooking) linked to it. 
+            // It will not get a record if the master transaction only contains kiosk items.
             var query = from p in _context.Ktixmastertransaction
                           .Where(p => p.ReferenceNumber == ReferenceNumber
                         && p.IsRefunded == false
@@ -1324,48 +1328,68 @@ namespace KICSAPIServer.Controllers
 
             if (thisKtixBooking != null)
             {
+                // Get list of all session tickets/products associated with the master transaction.
                 var saleitemlistQ = from s in _context.Ktixbookingsaleitems
                                     where s.KtixBookingId == thisKtixBooking.KtixBookingId
                                     select s;
                 var saleItemlistR = await saleitemlistQ.Distinct().ToListAsync();
-
+                
+               
+                // iliterate all session  tickets/products (adult ticket, beanbag etc)
                 foreach (var thissaleitem in saleItemlistR)
                 {
+                    // get the total count of each ticket/product
                     var temp = from s in _context.Ktixbookingsaleitems
                                where s.KtixBookingId == thisKtixBooking.KtixBookingId
                                select s;
+                    // this can return like 2 adult tickets
                     var numberOfItemsInBooking = await temp.CountAsync();
 
+
+                    // go through each session in the session list to
                     foreach (var thisSession in sessionR)
                     {
 
-                        //logic to make sure its valid for the tickets or items in the original booking.
+                        //logic to make sure that this saleitem is avalbile for purchase in the new session.
+                        //method to check how many is avaliable  of the ticket/product in the new sessions for sale.
 
-                        if (thisKtixBooking.KtixSessionId != thisSession.KtixSessionId || thisSession.KtixPriceGroup.IsAllowTransferDestination == true)
+
+                       // if (numberOfItemsAvailable < numberOfItemsInBooking)
+                       // {
+                       //   sessionR.Remove(thisSession);
+                       // }
+
+                        //if this session is the same session in the orignal booking or this session doesnt allow transfers, remove from list.
+                        if (thisKtixBooking.KtixSessionId == thisSession.KtixSessionId || thisSession.KtixPriceGroup.IsAllowTransferDestination == false)
                         {
-                            result.Add(new SessionsByCinemaDTO()
-                            {
-                                SessionId = thisSession.Session.SessionId,
-                                CinemaId = thisSession.Session.CinemaId,
-                                SessionDateTime = thisSession.Session.DateTime,
-                                DayOfWeek = thisSession.Session.DateTime.DayOfWeek.ToString(),
-                                CinemaName = thisSession.Session.Cinema.Name,
-                                ScreenName = thisSession.Session.Screen.Name,
-                                MovieTitle = thisSession.Session.MovieInstance.MovieDetail.Title,
-                                KTixPriceGroupId = thisSession.KtixPriceGroupId,
-                                PriceGroup = thisSession.KtixPriceGroup.Name,
-                                PosterURL = "",
-                                RunningTimeInMin = thisSession.Session.MovieInstance.MovieDetail.RunningTime.ToString(),
-                                RatingName = thisSession.Session.MovieInstance.MovieDetail.Rating.Name,
-                                IsCancelled = thisSession.IsCancelled,
-                                IsSoldOut = false,
-                                Codes = ""
-                            });
+                            sessionR.Remove(thisSession);
                         }
-
-
                     }
                 }
+
+                // after removing sessions that are not needed or plausible, create a DTO object to return back to the API.
+                foreach (var thisSession in sessionR)
+                {
+                    result.Add(new SessionsByCinemaDTO()
+                    {
+                        SessionId = thisSession.Session.SessionId,
+                        CinemaId = thisSession.Session.CinemaId,
+                        SessionDateTime = thisSession.Session.DateTime,
+                        DayOfWeek = thisSession.Session.DateTime.DayOfWeek.ToString(),
+                        CinemaName = thisSession.Session.Cinema.Name,
+                        ScreenName = thisSession.Session.Screen.Name,
+                        MovieTitle = thisSession.Session.MovieInstance.MovieDetail.Title,
+                        KTixPriceGroupId = thisSession.KtixPriceGroupId,
+                        PriceGroup = thisSession.KtixPriceGroup.Name,
+                        PosterURL = "",
+                        RunningTimeInMin = thisSession.Session.MovieInstance.MovieDetail.RunningTime.ToString(),
+                        RatingName = thisSession.Session.MovieInstance.MovieDetail.Rating.Name,
+                        IsCancelled = thisSession.IsCancelled,
+                        IsSoldOut = false,
+                        Codes = ""
+                    });
+                }
+
                 return Ok(result);
             }
             else
