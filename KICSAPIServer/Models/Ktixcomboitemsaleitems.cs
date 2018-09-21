@@ -12,5 +12,6 @@ namespace KICSAPIServer.Models
         public int Quantity { get; set; }
 
         public Ktixcomboitem KtixComboItem { get; set; }
+
     }
 }

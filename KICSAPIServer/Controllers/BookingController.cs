@@ -19,10 +19,153 @@ namespace KICSAPIServer.Controllers
         {
             _context = context;
         }
-
         [HttpPost("AddTicketProductToCart")]
         // [Authorize]
         public async Task<IActionResult> AddTicketProductToCart([FromBody]AddTicketProductToCartDTO dto)
+        { 
+            //check if the ticket/product is still avaliable for this session before updating cart
+            var sessionq = from s in _context.Ktixsession
+                           where s.SessionId == dto.SessionId
+                           select s;
+            var thisKtixSession = await sessionq.FirstOrDefaultAsync();
+
+
+            //get total of screen where session is showing minus the soldout limit - total seats already sold online or POS.
+            int totalSessionSeats = thisKtixSession.Session.Screen.NumberOfSeats - thisKtixSession.Session.Screen.SoldOutLimit;
+            // get total seats sold on POS and Online
+            // function is in SessionController
+            int totalSoldSeats = CountTicketsSoldForSession(thisKtixSession.KtixSessionId);
+            // get total seats in cart which are not committed for session
+            // function is in SessionController
+            int reservredTicketsInPosCarts = GetNumberOfTicketsOnHoldInCartForPOS(thisKtixSession.KtixPriceGroup.KtixSettingId, thisKtixSession.SessionId);
+            //get seats remaining
+            int liveRemainingSeats = totalSessionSeats - totalSoldSeats - reservredTicketsInPosCarts;
+
+            //check if there is an itemOuantityOverride
+            int numberOfSaleItemsAvailable = GetQuantityOfAvailableSaleItemForSessionByItem(thisKtixSession.KtixSessionId, dto.KTixPriceGroupSaleItemId);
+
+            //there are still seats avaliable for sale.
+            if (liveRemainingSeats > 0 && numberOfSaleItemsAvailable > 0)
+            {
+                var query = from p in _context.Ktixtransactioncart
+                            where p.KtixTransactionCartId == dto.KTixTransactionCartId
+                            && p.KtixTransactionCartId > 1
+                            select p;
+
+                var transactioncart = await query.FirstOrDefaultAsync();
+                if (transactioncart != null)
+                {
+
+                    //check if item exists for an incremetation of 1
+                    var q2 = from p in _context.Ktixtransactioncartitems
+                             where p.KtixPriceGroupSaleItemId == dto.KTixPriceGroupSaleItemId
+                             && p.KtixTransactionCartId == transactioncart.KtixTransactionCartId
+                             select p;
+
+                    var q2Result = await q2.FirstOrDefaultAsync();
+
+                    if (q2Result != null)
+                    {
+                        q2Result.Quantity += 1;
+                        _context.Update(q2Result);
+
+                    }
+                    //else add a new entry
+                    else
+                    {
+                        Ktixtransactioncartitems newdto = new Ktixtransactioncartitems()
+                        {
+                            KtixTransactionCartId = dto.KTixTransactionCartId,
+                            KtixPriceGroupSaleItemId = dto.KTixPriceGroupSaleItemId,
+                            Quantity = 1,
+                            KTixPriceGroupId = dto.KTixPriceGroupId,
+                            SessionId = dto.SessionId
+                        };
+
+                        //have a cart already so add item
+                        _context.Add(newdto);
+                    }
+                    _context.SaveChanges();
+
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = dto.KTixTransactionCartId,
+                        Status = true,
+                        Message = "Ticket/Product added successfully to existing cart.",
+                        CartCreateDateTime = transactioncart.CreateDateTime.ToString(),
+                        CartExpiryDateTime = transactioncart.ExpiryDateTime.ToString()
+                    };
+
+                    return Ok(thisCart);
+
+                }
+                else
+                {
+
+
+                    //add will be run this code block
+                    //dont have a cart so need to initialize mastertransaction record and create a cart
+                    Ktixtransactioncart newCart = new Ktixtransactioncart()
+                    {
+                        CreateDateTime = DateTime.Now,
+                        ExpiryDateTime = DateTime.Now.AddMinutes(10)
+
+                    };
+                    _context.Add(newCart);
+
+                    //initialize a booking
+                    Ktixmastertransaction newmastertransaction = new Ktixmastertransaction()
+                    {
+                        KtixMasterTransactionId = Guid.NewGuid(),
+                        IsPosSale = true,
+                        KtixPosTerminalId = dto.KTixPosTerminalId,
+                        CmsuserId = dto.CMSUserId,
+                        IsCommited = false,
+                        IsError = false,
+                        IsRefunded = false,
+                        KtixTransactionCartId = newCart.KtixTransactionCartId
+                    };
+                    _context.Add(newmastertransaction);
+
+                    //add items to new cart
+                    Ktixtransactioncartitems newCartItem = new Ktixtransactioncartitems()
+                    {
+                        KtixTransactionCartId = newCart.KtixTransactionCartId,
+                        KtixPriceGroupSaleItemId = dto.KTixPriceGroupSaleItemId,
+                        //KtixPriceGroupComboItemId = dto.KTixPriceGroupSaleItemId,
+                        // KtixVoucherId = dto.KTixVoucherId,
+                        Quantity = 1,
+                        KTixPriceGroupId = dto.KTixPriceGroupId,
+                        SessionId = dto.SessionId
+                        // KtixKioskSaleItemId = dto.KTixKioskSaleItemId
+
+                    };
+                    _context.Add(newCartItem);
+
+                    _context.SaveChanges();
+
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = newCart.KtixTransactionCartId,
+                        Status = true,
+                        Message = "Ticket/Product added successfully to new cart.",
+                        CartCreateDateTime = newCart.CreateDateTime.ToString(),
+                        CartExpiryDateTime = newCart.ExpiryDateTime.ToString()
+                    };
+
+                    return Ok(thisCart);
+                }
+            }
+            else
+            {
+                return BadRequest("there are no tickets left for the session");
+            }
+
+        }
+
+        [HttpPost("AddComboTicketToCart")]
+        // [Authorize]
+        public async Task<IActionResult> AddComboTicketToCart([FromBody]AddComboTicketToCartDTO dto)
         {
 
             var query = from p in _context.Ktixtransactioncart
@@ -33,10 +176,12 @@ namespace KICSAPIServer.Controllers
             var transactioncart = await query.FirstOrDefaultAsync();
             if (transactioncart != null)
             {
+                //check if the ticket/product is still avaliable for this session
+                int itemAvaliability = 0;
 
                 //check if item exists for an incremetation of 1
                 var q2 = from p in _context.Ktixtransactioncartitems
-                         where p.KtixPriceGroupSaleItemId == dto.KTixPriceGroupSaleItemId
+                         where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
                          && p.KtixTransactionCartId == transactioncart.KtixTransactionCartId
                          select p;
 
@@ -54,7 +199,7 @@ namespace KICSAPIServer.Controllers
                     Ktixtransactioncartitems newdto = new Ktixtransactioncartitems()
                     {
                         KtixTransactionCartId = dto.KTixTransactionCartId,
-                        KtixPriceGroupSaleItemId = dto.KTixPriceGroupSaleItemId,
+                        KtixPriceGroupComboItemId = dto.KTixPriceGroupComboItemId,
                         Quantity = 1,
                         KTixPriceGroupId = dto.KTixPriceGroupId,
                         SessionId = dto.SessionId
@@ -109,7 +254,7 @@ namespace KICSAPIServer.Controllers
                 Ktixtransactioncartitems newCartItem = new Ktixtransactioncartitems()
                 {
                     KtixTransactionCartId = newCart.KtixTransactionCartId,
-                    KtixPriceGroupSaleItemId = dto.KTixPriceGroupSaleItemId,
+                    KtixPriceGroupComboItemId = dto.KTixPriceGroupComboItemId,
                     //KtixPriceGroupComboItemId = dto.KTixPriceGroupSaleItemId,
                     // KtixVoucherId = dto.KTixVoucherId,
                     Quantity = 1,
@@ -718,7 +863,7 @@ namespace KICSAPIServer.Controllers
                 String bookingNumber = "";
                 String OrderNumber = "";
 
-                //calculate total ktixbooking cost
+                //calculate total ktixbooking cost for single items
                 var TP = from s in _context.Ktixtransactioncartitems
                         .Where(s => s.KtixTransactionCartId == dto.CartId
                            && s.KtixPriceGroupSaleItem != null
@@ -733,6 +878,23 @@ namespace KICSAPIServer.Controllers
                         totalKtixBookingCost += (item.KtixPriceGroupSaleItem.Price * item.Quantity);
                     }
                 }
+
+                //calculate total ktixbooking cost for combo items
+                var ci = from s in _context.Ktixtransactioncartitems
+                        .Where(s => s.KtixTransactionCartId == dto.CartId
+                           && s.KtixPriceGroupSaleItem != null
+                         && s.SessionId != null && s.Quantity > 0)
+                           .Include("KtixPriceGroupSaleItem")
+                         select s;
+                var ciResult = await ci.ToListAsync();
+                if (ciResult != null && ciResult.Count() > 0)
+                {
+                    foreach (var item in ciResult)
+                    {
+                        totalKtixBookingCost += (item.KtixPriceGroupComboItem.Price * item.Quantity);
+                    }
+                }
+
 
                 //calculate total kioskorder cost
                 var Kiosk = from s in _context.Ktixtransactioncartitems
@@ -800,6 +962,7 @@ namespace KICSAPIServer.Controllers
 
                     newBookingId = newBooking.KtixBookingId;
 
+                    //add all single items.
                     foreach (var item in TPResult)
                     {
                         if (item.Quantity > 1)
@@ -830,6 +993,38 @@ namespace KICSAPIServer.Controllers
                         }
 
                     }
+
+                    //add all combo items.
+                    foreach (var item in TPResult)
+                    {
+                        if (item.Quantity > 1)
+                        {
+                            for (int i = 0; i < item.Quantity; i++)
+                            {
+                                Ktixbookingcomboitems newbookingsaleitem = new Ktixbookingcomboitems()
+                                {
+                                    KtixBookingId = newBooking.KtixBookingId,
+                                    KtixPriceGroupComboItemId = item.KtixPriceGroupComboItemId ?? default(int),
+
+
+                                };
+                                _context.Add(newbookingsaleitem);
+                            }
+                        }
+                        else
+                        {
+                            Ktixbookingcomboitems newbookingsaleitem = new Ktixbookingcomboitems()
+                            {
+                                KtixBookingId = newBooking.KtixBookingId,
+                                KtixPriceGroupComboItemId = item.KtixPriceGroupComboItemId ?? default(int),
+
+                            };
+                            _context.Add(newbookingsaleitem);
+                        }
+
+                    }
+
+
                     _context.SaveChanges();
                     //return cart
                     // return Ok(newBooking.KtixBookingId);
@@ -1333,8 +1528,8 @@ namespace KICSAPIServer.Controllers
                                     where s.KtixBookingId == thisKtixBooking.KtixBookingId
                                     select s;
                 var saleItemlistR = await saleitemlistQ.Distinct().ToListAsync();
-                
-               
+
+
                 // iliterate all session  tickets/products (adult ticket, beanbag etc)
                 foreach (var thissaleitem in saleItemlistR)
                 {
@@ -1351,13 +1546,14 @@ namespace KICSAPIServer.Controllers
                     {
 
                         //logic to make sure that this saleitem is avalbile for purchase in the new session.
-                        //method to check how many is avaliable  of the ticket/product in the new sessions for sale.
+                        //method to check how many is avaliable  of the ticket/product in the new sessions for sale
+                        //get total amount of sale item per price group, applys an override for a session if applicable then minus amount of already sold.
+                        int numberOfItemsAvailable = GetQuantityOfAvailableSaleItemForSessionByItem(thisSession.KtixSessionId, thissaleitem.KtixPriceGroupSaleItemId);
 
-
-                       // if (numberOfItemsAvailable < numberOfItemsInBooking)
-                       // {
-                       //   sessionR.Remove(thisSession);
-                       // }
+                        if (numberOfItemsAvailable < numberOfItemsInBooking)
+                        {
+                            sessionR.Remove(thisSession);
+                        }
 
                         //if this session is the same session in the orignal booking or this session doesnt allow transfers, remove from list.
                         if (thisKtixBooking.KtixSessionId == thisSession.KtixSessionId || thisSession.KtixPriceGroup.IsAllowTransferDestination == false)
@@ -1466,5 +1662,128 @@ namespace KICSAPIServer.Controllers
             }
 
         }
+
+
+        public int GetQuantityOfAvailableSaleItemForSessionByItem(long KtixSessionId, int priceGroupSaleItemId)
+        {
+            var tmpA = from a in _context.Ktixsession
+                       where a.KtixSessionId == KtixSessionId
+                       select a;
+
+            var thisSession = tmpA.FirstOrDefault();
+
+            var tmpB = from b in _context.Ktixpricegroupsaleitems
+                       where b.KtixPriceGroupSaleItemId == priceGroupSaleItemId
+                       select b;
+            var thisPriceGroupSaleItem = tmpB.FirstOrDefault();
+
+            if (thisSession != null && thisPriceGroupSaleItem != null)
+            {
+                int numberOfItemsForSession = thisPriceGroupSaleItem.NumberAvailablePerSession;
+
+                //check if there is an override
+                var q = from o in _context.Ktixsessionsaleitemoverride
+                             where o.KtixSaleItemId == thisPriceGroupSaleItem.KtixSaleItemId
+                             && o.KtixSessionId == KtixSessionId
+                        select o;
+                var thisKtixsessionsaleitemoverride = q.FirstOrDefault();
+
+                if (thisKtixsessionsaleitemoverride != null)
+                {
+                    if (thisKtixsessionsaleitemoverride.NumberAvailablePerSession != null)
+                    {
+                        numberOfItemsForSession = thisKtixsessionsaleitemoverride.NumberAvailablePerSession.GetValueOrDefault();
+                    }
+
+                }
+
+
+                int numberSold = 0;
+
+
+                var bookingsq = from r in _context.Ktixbooking
+                        where r.KtixSessionId == KtixSessionId
+                        && r.IsCommitted == true
+                        select r;
+
+                var bookingList = bookingsq.ToList();
+
+                
+
+                foreach (var thisBooking in bookingList)
+                {
+                    int numberSoldThisBooking = 0;
+
+                    //IList<ORM.Ktixbookingsaleitem> bookingSaleItemList = DAL.DataClasses.KTixBooking.GetBookingSaleItems(thisBooking.KTixBookingId);
+                    IList<Ktixsaleitem> bookingSaleItemList = GetAllItems(thisBooking.KtixBookingId);
+
+                    //foreach (ORM.Ktixbookingsaleitem thisBookingSaleItem in bookingSaleItemList)
+                    foreach (var thisKTixSaleItem in bookingSaleItemList)
+                    {
+
+                            if (thisKTixSaleItem.KtixSaleItemId == thisPriceGroupSaleItem.KtixSaleItemId)
+                            {
+                                numberSoldThisBooking++;
+                            }
+                    }
+
+                    numberSold += numberSoldThisBooking;
+                }
+
+                return numberOfItemsForSession - numberSold;
+            }
+
+            return 0;
+        }
+
+        public IList<Ktixsaleitem> GetAllItems(Guid kTixBookingId)
+        {
+            var saleitemq = from o in _context.Ktixbookingsaleitems
+                             where o.KtixBookingId == kTixBookingId
+                             select o;
+            var bookingSaleItemList = saleitemq.ToList();
+
+            var combosaleitemq = from o in _context.Ktixbookingcomboitems
+                            where o.KtixBookingId == kTixBookingId
+                            select o;
+            var comboItemList = combosaleitemq.ToList();
+
+            IList<Ktixsaleitem> saleItemList = new List<Ktixsaleitem>();
+
+            foreach (var item in bookingSaleItemList)
+            {
+                saleItemList.Add(item.KtixPriceGroupSaleItem.KtixSaleItem);
+            }
+
+            foreach (var item in comboItemList)
+            {
+                var ci = from o in _context.Ktixcomboitemsaleitems
+                             where o.KtixComboItemId == item.KtixPriceGroupComboItem.KtixComboItemId
+                             select o;
+                var combosaleitemslist = ci.ToList();
+
+                foreach (var cbItem in combosaleitemslist)
+                {
+                    for (int i = 1; i <= cbItem.Quantity; i++)
+                    {
+                        var si = from o in _context.Ktixsaleitem
+                                 where o.KtixSaleItemId == cbItem.KtixSaleItemId
+                                 select o;
+                        var thissaleitem = si.FirstOrDefault();
+
+
+                        saleItemList.Add(thissaleitem);
+                    }
+                }
+            }
+
+            var result = from item in saleItemList
+                         orderby item.IsTicket descending, item.Name
+                         select item;
+
+            return result.ToList();
+        }
     }
+
+
 }

@@ -20,7 +20,7 @@ namespace KICSAPIServer.Controllers
         }
 
         [HttpGet("GetSessionsByCinema")]
-       // [Authorize]
+        // [Authorize]
         public async Task<IActionResult> GetSessionsByCinema(Guid cinemaId)
         {
             var result = new List<SessionsByCinemaDTO>();
@@ -39,7 +39,7 @@ namespace KICSAPIServer.Controllers
                             .Include("Session.MovieInstance.MovieDetail.Movie")
                             .Include("Session.MovieInstance.MovieDetail.Rating")
                             .Include("KtixPriceGroup")
-                            orderby s.Session.DateTime ascending
+                        orderby s.Session.DateTime ascending
                         select s;
 
             var list = await query.ToListAsync();
@@ -77,6 +77,21 @@ namespace KICSAPIServer.Controllers
                     posterURL = item.Session.Cinema.WebsiteUrl + "/SharedContent/" + item.Session.MovieInstance.MovieDetail.Movie.MovieId.ToString() + "/" + ResultContentObject.ShortGuid + ResultContentObject.ContentFormat.FileExtension;
                 }
 
+
+                //get seats remaining for session when it was last checked online - not live accurate
+                int sessionSeatsRemaining = item.Session.SeatsRemaining;
+
+                //get total of screen where session is showing minus the soldout limit - total seats already sold online or POS.
+                int totalSessionSeats = item.Session.Screen.NumberOfSeats - item.Session.Screen.SoldOutLimit;
+
+                // get total seats sold on POS and Online
+                int totalSoldSeats = CountTicketsSoldForSession(item.KtixSessionId);
+
+                // get total seats in cart which are not committed for session
+                int reservredTicketsInPosCarts = GetNumberOfTicketsOnHoldInCartForPOS(item.KtixPriceGroup.KtixSettingId, item.SessionId);
+
+                int liveRemainingSeats = totalSessionSeats - totalSoldSeats - reservredTicketsInPosCarts;
+
                 result.Add(new SessionsByCinemaDTO()
                 {
                     SessionId = item.Session.SessionId,
@@ -93,7 +108,9 @@ namespace KICSAPIServer.Controllers
                     RatingName = item.Session.MovieInstance.MovieDetail.Rating.Name,
                     IsCancelled = item.IsCancelled,
                     IsSoldOut = isSO,
-                    Codes = outputcodes
+                    Codes = outputcodes,
+                    ScreenTotalSeats = totalSessionSeats.ToString(),
+                    SessionAvaliableSeats = liveRemainingSeats.ToString()
                 });
             }
 
@@ -109,8 +126,47 @@ namespace KICSAPIServer.Controllers
 
         }
 
+        [HttpGet("GetComboTicketsBySession")]
+        // [Authorize]
+        public async Task<IActionResult> GetComboTicketsBySession(long sessionId)
+        {
+
+            var pgquery = from pg in _context.Ktixsession
+                          where pg.SessionId == sessionId
+                          select pg.KtixPriceGroupId;
+
+            var pgresults = pgquery.FirstOrDefault();
+
+
+            var comboQuery = from s in _context.Ktixpricegroupcomboitems
+                             where s.KtixPriceGroupId == pgresults
+                             select s;
+
+            var tickets = await comboQuery.Select(x => new ComboTicketsBySessionDTO()
+            {
+                KTixPriceGroupComboItemId = x.KtixPriceGroupComboItemId,
+                KTixComboItemId = x.KtixComboItemId,
+                KTixComboItemName = x.KtixComboItem.Name,
+                DisplayOrder = x.DisplayOrder,
+                Price = x.Price,
+                IsAvaliable = true,
+                IsSoldout = false
+            }).ToListAsync();
+
+            if (tickets != null)
+            {
+                return Ok(tickets);
+            }
+            else
+            {
+                return NotFound();
+
+            }
+        }
+
+
         [HttpGet("GetTicketsBySession")]
-       // [Authorize]
+        // [Authorize]
         public async Task<IActionResult> GetTicketsBySession(long sessionId)
         {
 
@@ -126,7 +182,7 @@ namespace KICSAPIServer.Controllers
                         && s.KtixSaleItem.IsTicket == true
                         orderby s.DisplayOrder, s.KtixSaleItem.Name
                         select s;
-
+  
             var tickets = await query.Select(x => new TicketsBySessionDTO()
             {
                 KTixPriceGroupSaleItemId = x.KtixPriceGroupSaleItemId,
@@ -150,7 +206,7 @@ namespace KICSAPIServer.Controllers
         }
 
         [HttpGet("GetProductsBySession")]
-       // [Authorize]
+        // [Authorize]
         public async Task<IActionResult> GetProductsBySession(long sessionId)
         {
             var pgquery = from pg in _context.Ktixsession
@@ -187,6 +243,128 @@ namespace KICSAPIServer.Controllers
                 return NotFound();
 
             }
+        }
+
+        public int CountTicketsSoldForSession(long KtixSessionId)
+        {
+            int counter = 0;
+
+            //get all bookings sold online or by POS
+            var q = from r in _context.Ktixbooking
+                    where r.KtixSessionId == KtixSessionId
+                    && r.IsCommitted == true
+                    select r;
+
+            var bookingList = q.ToList();
+            if (bookingList.Count() > 0)
+            {
+                //get numbers of tickets sold per booking
+                foreach (var thisBooking in bookingList)
+                {
+                    counter += GetNumberOfTicketsInBooking(thisBooking.KtixBookingId);
+                }
+            }
+            return counter;
+        }
+
+        public int GetNumberOfTicketsInBooking(Guid kTixBookingId)
+        {
+            int numberOfTickets = 0;
+
+            //get number of individual tickets
+            var result = from o in _context.Ktixbookingsaleitems
+                         where o.KtixBookingId == kTixBookingId &&
+                               o.KtixPriceGroupSaleItem.KtixSaleItem.IsTicket == true
+                         select o;
+            numberOfTickets = result.Count();
+
+            // get number combo items that contain single items.
+            var comboResult = from o in _context.Ktixbookingcomboitems
+                              where o.KtixBookingId == kTixBookingId
+                              select o;
+
+            foreach (var cbi in comboResult.ToList())
+            {
+                numberOfTickets += CountNumberOfTicketsInComboItem(cbi.KtixPriceGroupComboItem.KtixComboItemId);
+            }
+
+            return numberOfTickets;
+        }
+
+        public int CountNumberOfTicketsInComboItem(Guid kTixComboItemId)
+        {
+            int numberOfTickets = 0;
+            IList<Ktixcomboitemsaleitems> saleItemList = GetSaleItems(kTixComboItemId);
+
+            foreach (var thisSaleItem in saleItemList)
+            {
+                var q = from r in _context.Ktixsaleitem
+                        where r.KtixSaleItemId == thisSaleItem.KtixSaleItemId
+                        select r;
+
+                var item = q.FirstOrDefault();
+                if (item.IsTicket == true)
+                {
+                    numberOfTickets += thisSaleItem.Quantity;
+                }
+            }
+
+            return numberOfTickets;
+        }
+
+        public IList<Ktixcomboitemsaleitems> GetSaleItems(Guid kTixComboItemId)
+        {
+            var result = from o in _context.Ktixcomboitemsaleitems
+                         where o.KtixComboItemId == kTixComboItemId
+                         select o;
+            return result.ToList();
+        }
+
+
+        public int GetNumberOfTicketsOnHoldInCartForPOS(Guid KtixSettingId, long sessionId)
+        {
+            int numberOfTickets = 0;
+
+            var query = from r in _context.Ktixtransactioncartitems
+                        where r.SessionId == sessionId
+                        select r;
+
+            var result = query.ToList();
+
+            if (result.Count() > 0)
+            {
+                foreach (var thisCartItem in result)
+                {
+                    var q = from r in _context.Ktixmastertransaction
+                            where r.KtixTransactionCartId == thisCartItem.KtixTransactionCart.KtixTransactionCartId
+                            select r;
+
+                    var thismastertransaction = q.FirstOrDefault();
+
+                    if (thismastertransaction != null)
+                    {
+                        //check if the master transaction of the cart has already been paid
+                        var tmp = from t in _context.Ktixmasterpaymenttype
+                                  where t.KtixMasterTransactionId == thismastertransaction.KtixMasterTransactionId
+                                  select t;
+                        var HasPaymentType = tmp.FirstOrDefault();
+
+                        //if item in cart is not commited/has payment then add item to counter
+                        //cart can be processed but still waiting for payment.
+                        if (HasPaymentType == null && thismastertransaction.IsRefunded == false)
+                        {
+                            numberOfTickets += thisCartItem.Quantity;
+                        }
+
+
+                    }
+
+
+                }
+
+
+            }
+            return numberOfTickets;
         }
     }
 }

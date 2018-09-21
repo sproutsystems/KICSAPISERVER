@@ -114,6 +114,8 @@ namespace KICSAPIServer.Models
         public String Codes { get; set; }
         public bool IsSoldOut { get; set; }
         public bool IsCancelled { get; set; }
+        public string ScreenTotalSeats { get; set; }
+        public string SessionAvaliableSeats { get; set; }
     }
 
     public class TicketsBySessionDTO
@@ -126,6 +128,18 @@ namespace KICSAPIServer.Models
         public Boolean IsAvaliable { get; set; }
         public Boolean IsSoldout { get; set; }
     }
+
+    public class ComboTicketsBySessionDTO
+    {
+        public long KTixPriceGroupComboItemId { get; set; }
+        public Guid KTixComboItemId { get; set; }
+        public int DisplayOrder { get; set; }
+        public decimal Price { get; set; }
+        public String KTixComboItemName { get; set; }
+        public Boolean IsAvaliable { get; set; }
+        public Boolean IsSoldout { get; set; }
+    }
+
 
     public class ProductsBySessionDTO
     {
@@ -193,6 +207,17 @@ namespace KICSAPIServer.Models
     {
         public int KTixTransactionCartId { get; set; }
         public int KTixPriceGroupSaleItemId { get; set; }
+        public Guid KTixPriceGroupId { get; set; }
+        public long SessionId { get; set; }
+        public Guid KTixPosTerminalId { get; set; }
+        public Guid CMSUserId { get; set; }
+
+    }
+
+    public class AddComboTicketToCartDTO
+    {
+        public int KTixTransactionCartId { get; set; }
+        public int KTixPriceGroupComboItemId { get; set; }
         public Guid KTixPriceGroupId { get; set; }
         public long SessionId { get; set; }
         public Guid KTixPosTerminalId { get; set; }
