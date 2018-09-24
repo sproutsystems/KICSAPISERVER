@@ -87,6 +87,17 @@ namespace KICSAPIServer.Controllers
                     }
                     _context.SaveChanges();
 
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                             where p.SessionId == dto.SessionId
+                             select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - 1);
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
                     UpdatedCartDTO thisCart = new UpdatedCartDTO()
                     {
                         CartId = dto.KTixTransactionCartId,
@@ -142,6 +153,17 @@ namespace KICSAPIServer.Controllers
                     };
                     _context.Add(newCartItem);
 
+                    _context.SaveChanges();
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - 1);
+                    _context.Update(thisSession);
                     _context.SaveChanges();
 
                     UpdatedCartDTO thisCart = new UpdatedCartDTO()
@@ -210,6 +232,17 @@ namespace KICSAPIServer.Controllers
                 }
                 _context.SaveChanges();
 
+                //update the seats remaining counter on the session
+                var sesstmp = from p in _context.Session
+                              where p.SessionId == dto.SessionId
+                              select p;
+
+                var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - 1);
+                _context.Update(thisSession);
+                _context.SaveChanges();
+
                 UpdatedCartDTO thisCart = new UpdatedCartDTO()
                 {
                     CartId = dto.KTixTransactionCartId,
@@ -267,6 +300,17 @@ namespace KICSAPIServer.Controllers
 
                 _context.SaveChanges();
 
+                //update the seats remaining counter on the session
+                var sesstmp = from p in _context.Session
+                              where p.SessionId == dto.SessionId
+                              select p;
+
+                var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - 1);
+                _context.Update(thisSession);
+                _context.SaveChanges();
+
                 UpdatedCartDTO thisCart = new UpdatedCartDTO()
                 {
                     CartId = newCart.KtixTransactionCartId,
@@ -297,10 +341,39 @@ namespace KICSAPIServer.Controllers
                 {
                     thisItem.Quantity -= 1;
                     _context.Update(thisItem);
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining + 1);
+
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
+
                 }
                 else
                 {
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - thisItem.Quantity);
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
+
                     _context.Remove(thisItem);
+
+
                 }
 
                 _context.SaveChanges();
@@ -654,6 +727,18 @@ namespace KICSAPIServer.Controllers
             var thisItem = await query.FirstOrDefaultAsync();
             if (thisItem != null)
             {
+                //update the seats remaining counter on the session
+                var sesstmp = from p in _context.Session
+                              where p.SessionId == dto.SessionId
+                              select p;
+
+                var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - thisItem.Quantity);
+                _context.Update(thisSession);
+                _context.SaveChanges();
+
+
                 _context.Remove(thisItem);
                 _context.SaveChanges();
             }
