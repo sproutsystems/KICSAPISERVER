@@ -146,7 +146,7 @@ namespace KICSAPIServer.Controllers
             {
                 KTixPriceGroupComboItemId = x.KtixPriceGroupComboItemId,
                 KTixComboItemId = x.KtixComboItemId,
-                KTixComboItemName = x.KtixComboItem.Name,
+                KTixComboItemName = x.KtixComboItem.Name + "( " + x.KtixComboItem.Description  + ")",
                 DisplayOrder = x.DisplayOrder,
                 Price = x.Price,
                 IsAvaliable = true,

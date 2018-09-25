@@ -233,6 +233,15 @@ namespace KICSAPIServer.Models
 
     }
 
+    public class RemoveComboTicketToCartDTO
+    {
+        public int KTixTransactionCartId { get; set; }
+        public int KTixPriceGroupComboItemId { get; set; }
+        public long SessionId { get; set; }
+
+    }
+
+
     public class AddKioskProductToCartDTO
     {
         public int KTixTransactionCartId { get; set; }

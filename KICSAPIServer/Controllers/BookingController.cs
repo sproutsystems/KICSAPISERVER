@@ -22,7 +22,7 @@ namespace KICSAPIServer.Controllers
         [HttpPost("AddTicketProductToCart")]
         // [Authorize]
         public async Task<IActionResult> AddTicketProductToCart([FromBody]AddTicketProductToCartDTO dto)
-        { 
+        {
             //check if the ticket/product is still avaliable for this session before updating cart
             var sessionq = from s in _context.Ktixsession
                            where s.SessionId == dto.SessionId
@@ -89,8 +89,8 @@ namespace KICSAPIServer.Controllers
 
                     //update the seats remaining counter on the session
                     var sesstmp = from p in _context.Session
-                             where p.SessionId == dto.SessionId
-                             select p;
+                                  where p.SessionId == dto.SessionId
+                                  select p;
 
                     var thisSession = await sesstmp.FirstOrDefaultAsync();
 
@@ -189,138 +189,179 @@ namespace KICSAPIServer.Controllers
         // [Authorize]
         public async Task<IActionResult> AddComboTicketToCart([FromBody]AddComboTicketToCartDTO dto)
         {
+            //check if the ticket/product is still avaliable for this session before updating cart
+            var sessionq = from s in _context.Ktixsession
+                           where s.SessionId == dto.SessionId
+                           select s;
+            var thisKtixSession = await sessionq.FirstOrDefaultAsync();
+            //get total of screen where session is showing minus the soldout limit - total seats already sold online or POS.
+            int totalSessionSeats = thisKtixSession.Session.Screen.NumberOfSeats - thisKtixSession.Session.Screen.SoldOutLimit;
+            // get total seats sold on POS and Online
+            // function is in SessionController
+            int totalSoldSeats = CountTicketsSoldForSession(thisKtixSession.KtixSessionId);
+            // get total seats in cart which are not committed for session
+            // function is in SessionController
+            int reservredTicketsInPosCarts = GetNumberOfTicketsOnHoldInCartForPOS(thisKtixSession.KtixPriceGroup.KtixSettingId, thisKtixSession.SessionId);
+            //get seats remaining
+            int liveRemainingSeats = totalSessionSeats - totalSoldSeats - reservredTicketsInPosCarts;
 
-            var query = from p in _context.Ktixtransactioncart
-                        where p.KtixTransactionCartId == dto.KTixTransactionCartId
-                        && p.KtixTransactionCartId > 1
-                        select p;
+            //check if there is an itemOuantityOverride
+            int numberOfSaleItemsAvailable = GetQuantityOfAvailableComboItemForSessionByItem(thisKtixSession.KtixSessionId, dto.KTixPriceGroupComboItemId);
 
-            var transactioncart = await query.FirstOrDefaultAsync();
-            if (transactioncart != null)
+            //there are still seats avaliable for sale.
+            if (liveRemainingSeats > 0 && numberOfSaleItemsAvailable > 0)
             {
-                //check if the ticket/product is still avaliable for this session
-                int itemAvaliability = 0;
+                var query = from p in _context.Ktixtransactioncart
+                            where p.KtixTransactionCartId == dto.KTixTransactionCartId
+                            && p.KtixTransactionCartId > 1
+                            select p;
+                var transactioncart = await query.FirstOrDefaultAsync();
 
-                //check if item exists for an incremetation of 1
-                var q2 = from p in _context.Ktixtransactioncartitems
-                         where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
-                         && p.KtixTransactionCartId == transactioncart.KtixTransactionCartId
-                         select p;
-
-                var q2Result = await q2.FirstOrDefaultAsync();
-
-                if (q2Result != null)
+                if (transactioncart != null)
                 {
-                    q2Result.Quantity += 1;
-                    _context.Update(q2Result);
+                    //check if the ticket/product is still avaliable for this session
+
+                    //check if item exists for an incremetation of 1
+                    var q2 = from p in _context.Ktixtransactioncartitems
+                             where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                             && p.KtixTransactionCartId == transactioncart.KtixTransactionCartId
+                             select p;
+
+                    var q2Result = await q2.FirstOrDefaultAsync();
+
+                    if (q2Result != null)
+                    {
+                        q2Result.Quantity += 1;
+                        _context.Update(q2Result);
+
+                    }
+                    //else add a new entry
+                    else
+                    {
+                        Ktixtransactioncartitems newdto = new Ktixtransactioncartitems()
+                        {
+                            KtixTransactionCartId = dto.KTixTransactionCartId,
+                            KtixPriceGroupComboItemId = dto.KTixPriceGroupComboItemId,
+                            Quantity = 1,
+                            KTixPriceGroupId = dto.KTixPriceGroupId,
+                            SessionId = dto.SessionId
+                        };
+
+                        //have a cart already so add item
+                        _context.Add(newdto);
+                    }
+                    _context.SaveChanges();
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    var tmp = from p in _context.Ktixpricegroupcomboitems
+                              where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                              select p;
+                    var thisComboItem = await tmp.FirstOrDefaultAsync();
+
+                    //get number of tickets in combo item
+                    int numberOfTicketsInCombo = CountNumberOfTicketsInComboItem(thisComboItem.KtixComboItemId);
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - numberOfTicketsInCombo);
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = dto.KTixTransactionCartId,
+                        Status = true,
+                        Message = "Combo Ticket added successfully to existing cart.",
+                        CartCreateDateTime = transactioncart.CreateDateTime.ToString(),
+                        CartExpiryDateTime = transactioncart.ExpiryDateTime.ToString()
+                    };
+
+                    return Ok(thisCart);
 
                 }
-                //else add a new entry
                 else
                 {
-                    Ktixtransactioncartitems newdto = new Ktixtransactioncartitems()
+
+
+                    //add will be run this code block
+                    //dont have a cart so need to initialize mastertransaction record and create a cart
+                    Ktixtransactioncart newCart = new Ktixtransactioncart()
                     {
-                        KtixTransactionCartId = dto.KTixTransactionCartId,
+                        CreateDateTime = DateTime.Now,
+                        ExpiryDateTime = DateTime.Now.AddMinutes(10)
+
+                    };
+                    _context.Add(newCart);
+
+                    //initialize a booking
+                    Ktixmastertransaction newmastertransaction = new Ktixmastertransaction()
+                    {
+                        KtixMasterTransactionId = Guid.NewGuid(),
+                        IsPosSale = true,
+                        KtixPosTerminalId = dto.KTixPosTerminalId,
+                        CmsuserId = dto.CMSUserId,
+                        IsCommited = false,
+                        IsError = false,
+                        IsRefunded = false,
+                        KtixTransactionCartId = newCart.KtixTransactionCartId
+                    };
+                    _context.Add(newmastertransaction);
+
+                    //add items to new cart
+                    Ktixtransactioncartitems newCartItem = new Ktixtransactioncartitems()
+                    {
+                        KtixTransactionCartId = newCart.KtixTransactionCartId,
                         KtixPriceGroupComboItemId = dto.KTixPriceGroupComboItemId,
+                        //KtixPriceGroupComboItemId = dto.KTixPriceGroupSaleItemId,
+                        // KtixVoucherId = dto.KTixVoucherId,
                         Quantity = 1,
                         KTixPriceGroupId = dto.KTixPriceGroupId,
                         SessionId = dto.SessionId
+                        // KtixKioskSaleItemId = dto.KTixKioskSaleItemId
+
+                    };
+                    _context.Add(newCartItem);
+
+                    _context.SaveChanges();
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    var tmp = from p in _context.Ktixpricegroupcomboitems
+                              where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                              select p;
+                    var thisComboItem = await tmp.FirstOrDefaultAsync();
+
+                    //get number of tickets in combo item
+                    int numberOfTicketsInCombo = CountNumberOfTicketsInComboItem(thisComboItem.KtixComboItemId);
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - numberOfTicketsInCombo);
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = newCart.KtixTransactionCartId,
+                        Status = true,
+                        Message = "Combo Ticket added successfully to new cart.",
+                        CartCreateDateTime = newCart.CreateDateTime.ToString(),
+                        CartExpiryDateTime = newCart.ExpiryDateTime.ToString()
                     };
 
-                    //have a cart already so add item
-                    _context.Add(newdto);
+                    return Ok(thisCart);
                 }
-                _context.SaveChanges();
-
-                //update the seats remaining counter on the session
-                var sesstmp = from p in _context.Session
-                              where p.SessionId == dto.SessionId
-                              select p;
-
-                var thisSession = await sesstmp.FirstOrDefaultAsync();
-
-                thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - 1);
-                _context.Update(thisSession);
-                _context.SaveChanges();
-
-                UpdatedCartDTO thisCart = new UpdatedCartDTO()
-                {
-                    CartId = dto.KTixTransactionCartId,
-                    Status = true,
-                    Message = "Ticket/Product added successfully to existing cart.",
-                    CartCreateDateTime = transactioncart.CreateDateTime.ToString(),
-                    CartExpiryDateTime = transactioncart.ExpiryDateTime.ToString()
-                };
-
-                return Ok(thisCart);
-
             }
             else
             {
-
-
-                //add will be run this code block
-                //dont have a cart so need to initialize mastertransaction record and create a cart
-                Ktixtransactioncart newCart = new Ktixtransactioncart()
-                {
-                    CreateDateTime = DateTime.Now,
-                    ExpiryDateTime = DateTime.Now.AddMinutes(10)
-
-                };
-                _context.Add(newCart);
-
-                //initialize a booking
-                Ktixmastertransaction newmastertransaction = new Ktixmastertransaction()
-                {
-                    KtixMasterTransactionId = Guid.NewGuid(),
-                    IsPosSale = true,
-                    KtixPosTerminalId = dto.KTixPosTerminalId,
-                    CmsuserId = dto.CMSUserId,
-                    IsCommited = false,
-                    IsError = false,
-                    IsRefunded = false,
-                    KtixTransactionCartId = newCart.KtixTransactionCartId
-                };
-                _context.Add(newmastertransaction);
-
-                //add items to new cart
-                Ktixtransactioncartitems newCartItem = new Ktixtransactioncartitems()
-                {
-                    KtixTransactionCartId = newCart.KtixTransactionCartId,
-                    KtixPriceGroupComboItemId = dto.KTixPriceGroupComboItemId,
-                    //KtixPriceGroupComboItemId = dto.KTixPriceGroupSaleItemId,
-                    // KtixVoucherId = dto.KTixVoucherId,
-                    Quantity = 1,
-                    KTixPriceGroupId = dto.KTixPriceGroupId,
-                    SessionId = dto.SessionId
-                    // KtixKioskSaleItemId = dto.KTixKioskSaleItemId
-
-                };
-                _context.Add(newCartItem);
-
-                _context.SaveChanges();
-
-                //update the seats remaining counter on the session
-                var sesstmp = from p in _context.Session
-                              where p.SessionId == dto.SessionId
-                              select p;
-
-                var thisSession = await sesstmp.FirstOrDefaultAsync();
-
-                thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - 1);
-                _context.Update(thisSession);
-                _context.SaveChanges();
-
-                UpdatedCartDTO thisCart = new UpdatedCartDTO()
-                {
-                    CartId = newCart.KtixTransactionCartId,
-                    Status = true,
-                    Message = "Ticket/Product added successfully to new cart.",
-                    CartCreateDateTime = newCart.CreateDateTime.ToString(),
-                    CartExpiryDateTime = newCart.ExpiryDateTime.ToString()
-                };
-
-                return Ok(thisCart);
+                return BadRequest("There are no tickets left for the session");
             }
         }
 
@@ -420,6 +461,130 @@ namespace KICSAPIServer.Controllers
                         CartId = dto.KTixTransactionCartId,
                         Status = true,
                         Message = "Successfully removed ticket/product from cart.",
+                    };
+
+                    return Ok(thisCart);
+                }
+            }
+            else
+            {
+                return BadRequest("Cart not found");
+
+            }
+        }
+
+
+        [HttpPost("RemoveComboTicketToCart")]
+        // [Authorize]
+        public async Task<IActionResult> RemoveComboTicketToCart([FromBody]RemoveComboTicketToCartDTO dto)
+        {
+
+            var query = from p in _context.Ktixtransactioncartitems
+                        where p.KtixTransactionCartId == dto.KTixTransactionCartId
+                        && p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                        select p;
+
+            var thisItem = await query.FirstOrDefaultAsync();
+            if (thisItem != null)
+            {
+                if (thisItem.Quantity > 1)
+                {
+                    thisItem.Quantity -= 1;
+                    _context.Update(thisItem);
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    var tmp = from p in _context.Ktixpricegroupcomboitems
+                              where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                              select p;
+                    var thisComboItem = await tmp.FirstOrDefaultAsync();
+
+                    //get number of tickets in combo item
+                    int numberOfTicketsInCombo = CountNumberOfTicketsInComboItem(thisComboItem.KtixComboItemId);
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - numberOfTicketsInCombo);
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
+
+                }
+                else
+                {
+
+                    //update the seats remaining counter on the session
+                    var sesstmp = from p in _context.Session
+                                  where p.SessionId == dto.SessionId
+                                  select p;
+
+                    var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                    var tmp = from p in _context.Ktixpricegroupcomboitems
+                              where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                              select p;
+                    var thisComboItem = await tmp.FirstOrDefaultAsync();
+
+                    //get number of tickets in combo item
+                    int numberOfTicketsInCombo = CountNumberOfTicketsInComboItem(thisComboItem.KtixComboItemId);
+
+                    thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - numberOfTicketsInCombo);
+                    _context.Update(thisSession);
+                    _context.SaveChanges();
+
+
+                    _context.Remove(thisItem);
+
+
+                }
+
+                _context.SaveChanges();
+
+
+            }
+            if (thisItem != null)
+            {
+                //count number of items in cart.
+                var counter = from c in _context.Ktixtransactioncartitems
+                              where c.KtixTransactionCartId == dto.KTixTransactionCartId
+                              select c;
+                var counterR = await counter.ToListAsync();
+                if (counterR.Count() == 0)
+                {
+                    var cartq = from a in _context.Ktixtransactioncart
+                                where a.KtixTransactionCartId == dto.KTixTransactionCartId
+                                select a;
+                    var cartR = await cartq.FirstOrDefaultAsync();
+                    _context.Remove(cartR);
+
+                    var mt = from m in _context.Ktixmastertransaction
+                             where m.KtixTransactionCartId == dto.KTixTransactionCartId
+                             select m;
+                    var mtR = await mt.FirstOrDefaultAsync();
+                    _context.Remove(mtR);
+
+                    _context.SaveChanges();
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = 1,
+                        Status = true,
+                        Message = "Successfully removed combo ticket from cart and removed cart.",
+                        CartCreateDateTime = cartR.CreateDateTime.ToString(),
+                        CartExpiryDateTime = cartR.ExpiryDateTime.ToString()
+                    };
+
+                    return Ok(thisCart);
+                }
+                else
+                {
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = dto.KTixTransactionCartId,
+                        Status = true,
+                        Message = "Successfully removed combo ticket from cart.",
                     };
 
                     return Ok(thisCart);
@@ -794,6 +959,96 @@ namespace KICSAPIServer.Controllers
             }
 
         }
+
+        [HttpPost("DeleteComboTicketFromCart")]
+        // [Authorize]
+        public async Task<IActionResult> DeleteComboTicketFromCart([FromBody]RemoveComboTicketToCartDTO dto)
+        {
+
+            var query = from p in _context.Ktixtransactioncartitems
+                        where p.KtixTransactionCartId == dto.KTixTransactionCartId
+                        && p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                        select p;
+
+            var thisItem = await query.FirstOrDefaultAsync();
+            if (thisItem != null)
+            {
+                //update the seats remaining counter on the session
+                var sesstmp = from p in _context.Session
+                              where p.SessionId == dto.SessionId
+                              select p;
+
+                var thisSession = await sesstmp.FirstOrDefaultAsync();
+
+                var tmp = from p in _context.Ktixpricegroupcomboitems
+                          where p.KtixPriceGroupComboItemId == dto.KTixPriceGroupComboItemId
+                          select p;
+                var thisComboItem = await tmp.FirstOrDefaultAsync();
+
+                //get number of tickets in combo item
+                int numberOfTicketsInCombo = CountNumberOfTicketsInComboItem(thisComboItem.KtixComboItemId);
+
+                thisSession.SeatsRemaining = (short)(thisSession.SeatsRemaining - (thisItem.Quantity * numberOfTicketsInCombo));
+                _context.Update(thisSession);
+                _context.SaveChanges();
+
+
+                _context.Remove(thisItem);
+                _context.SaveChanges();
+            }
+
+            if (thisItem != null)
+            {
+                //count number of items in cart.
+                var counter = from c in _context.Ktixtransactioncartitems
+                              where c.KtixTransactionCartId == dto.KTixTransactionCartId
+                              select c;
+                var counterR = await counter.ToListAsync();
+                if (counterR.Count() == 0)
+                {
+                    var cartq = from a in _context.Ktixtransactioncart
+                                where a.KtixTransactionCartId == dto.KTixTransactionCartId
+                                select a;
+                    var cartR = await cartq.FirstOrDefaultAsync();
+                    _context.Remove(cartR);
+
+                    var mt = from m in _context.Ktixmastertransaction
+                             where m.KtixTransactionCartId == dto.KTixTransactionCartId
+                             select m;
+                    var mtR = await mt.FirstOrDefaultAsync();
+                    _context.Remove(mtR);
+
+                    _context.SaveChanges();
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = 1,
+                        Status = true,
+                        Message = "Successfully deleted combo item  from cart and deleted cart."
+                        ,
+                        CartCreateDateTime = cartR.CreateDateTime.ToString(),
+                        CartExpiryDateTime = cartR.ExpiryDateTime.ToString()
+                    };
+                    return Ok(thisCart);
+                }
+                else
+                {
+                    UpdatedCartDTO thisCart = new UpdatedCartDTO()
+                    {
+                        CartId = dto.KTixTransactionCartId,
+                        Status = true,
+                        Message = "Successfully removed combo item from cart."
+                    };
+                    return Ok(thisCart);
+                }
+            }
+            else
+            {
+                return BadRequest("Cart not found");
+
+            }
+
+        }
+
 
         [HttpPost("DeleteKioskProductFromCart")]
         // [Authorize]
@@ -1615,16 +1870,17 @@ namespace KICSAPIServer.Controllers
                 var saleItemlistR = await saleitemlistQ.Distinct().ToListAsync();
 
 
-                // iliterate all session  tickets/products (adult ticket, beanbag etc)
+                // iliterate all session  tickets/products (2 adult ticket, 2 beanbag etc)
                 foreach (var thissaleitem in saleItemlistR)
                 {
                     // get the total count of each ticket/product
                     var temp = from s in _context.Ktixbookingsaleitems
                                where s.KtixBookingId == thisKtixBooking.KtixBookingId
+                               && s.KtixPriceGroupSaleItem.KtixSaleItemId == thissaleitem.KtixPriceGroupSaleItem.KtixSaleItemId
                                select s;
                     // this can return like 2 adult tickets
                     var numberOfItemsInBooking = await temp.CountAsync();
-
+                    //2
 
                     // go through each session in the session list to
                     foreach (var thisSession in sessionR)
@@ -1768,8 +2024,8 @@ namespace KICSAPIServer.Controllers
 
                 //check if there is an override
                 var q = from o in _context.Ktixsessionsaleitemoverride
-                             where o.KtixSaleItemId == thisPriceGroupSaleItem.KtixSaleItemId
-                             && o.KtixSessionId == KtixSessionId
+                        where o.KtixSaleItemId == thisPriceGroupSaleItem.KtixSaleItemId
+                        && o.KtixSessionId == KtixSessionId
                         select o;
                 var thisKtixsessionsaleitemoverride = q.FirstOrDefault();
 
@@ -1787,13 +2043,13 @@ namespace KICSAPIServer.Controllers
 
 
                 var bookingsq = from r in _context.Ktixbooking
-                        where r.KtixSessionId == KtixSessionId
-                        && r.IsCommitted == true
-                        select r;
+                                where r.KtixSessionId == KtixSessionId
+                                && r.IsCommitted == true
+                                select r;
 
                 var bookingList = bookingsq.ToList();
 
-                
+
 
                 foreach (var thisBooking in bookingList)
                 {
@@ -1806,10 +2062,10 @@ namespace KICSAPIServer.Controllers
                     foreach (var thisKTixSaleItem in bookingSaleItemList)
                     {
 
-                            if (thisKTixSaleItem.KtixSaleItemId == thisPriceGroupSaleItem.KtixSaleItemId)
-                            {
-                                numberSoldThisBooking++;
-                            }
+                        if (thisKTixSaleItem.KtixSaleItemId == thisPriceGroupSaleItem.KtixSaleItemId)
+                        {
+                            numberSoldThisBooking++;
+                        }
                     }
 
                     numberSold += numberSoldThisBooking;
@@ -1821,16 +2077,172 @@ namespace KICSAPIServer.Controllers
             return 0;
         }
 
+        public int GetQuantityOfAvailableComboItemForSessionByItem(long KtixSessionId, int priceGroupComboItemId)
+        {
+            var tmpA = from a in _context.Ktixsession
+                       where a.KtixSessionId == KtixSessionId
+                       select a;
+
+            var thisSession = tmpA.FirstOrDefault();
+
+            var tmpB = from b in _context.Ktixpricegroupcomboitems
+                       where b.KtixPriceGroupComboItemId == priceGroupComboItemId
+                       select b;
+            var thisPriceGroupComboItem = tmpB.FirstOrDefault();
+
+            if (thisSession != null && thisPriceGroupComboItem != null)
+            {
+                int numberOfItemsForSession = thisPriceGroupComboItem.NumberAvailablePerSession;
+
+                //if the numberOfItemsForSession == 0, we need to consider the sale items within the combo item.
+                if (numberOfItemsForSession == 0)
+                {
+                    //get all the sale items in this combo item
+                    IList<Ktixcomboitemsaleitems> comboSaleItemList = GetComboSaleItems(thisPriceGroupComboItem.KtixComboItemId);
+
+                    int finalAvailable = 9999;
+                    bool isAllItemsInPriceGroup = true;
+
+                    //check each sale item in the combo
+                    foreach (var thisComboSaleItem in comboSaleItemList)
+                    {
+                        int quantityOfSaleItem = thisComboSaleItem.Quantity;
+
+                        var tmp = from c in _context.Ktixpricegroupsaleitems
+                                  where c.KtixPriceGroupId == thisPriceGroupComboItem.KtixPriceGroupId
+                                  && c.KtixSaleItemId == thisComboSaleItem.KtixSaleItemId
+                                  select c;
+
+                        var thisPricegroupSaleItem = tmp.FirstOrDefault();
+
+                        //get the number of available sale items for this session
+                        int numberOfSaleItemsAvailable = GetQuantityOfAvailableSaleItemForSessionByItem(thisSession.KtixSessionId, thisPricegroupSaleItem.KtixPriceGroupSaleItemId);
+
+                        //this can be zero if the items in the combo item dont exist in the price group. this is ok!
+                        if (numberOfSaleItemsAvailable > 0)
+                        {
+                            //say we sell 2 x tickets in 1 x combo, we need to divide the number of sellable items by the quantity to get the real number
+                            numberOfSaleItemsAvailable = numberOfSaleItemsAvailable / quantityOfSaleItem;
+
+                            //set the finalAvailable number to the lowest available sale item quantity.
+                            if (numberOfSaleItemsAvailable < finalAvailable)
+                            {
+                                finalAvailable = numberOfSaleItemsAvailable;
+                            }
+                        }
+                        else
+                        {
+                            //there are zero sale items available, which usually means the sale items are not in the price group.
+                            isAllItemsInPriceGroup = false;
+                        }
+                    }
+
+                    //if not all the items in this combo item exist in the price group, return zero.
+                    if (isAllItemsInPriceGroup == false)
+                    {
+                        return 0;
+                    }
+
+                    return finalAvailable;
+                }
+                else //this combo item has a maximum allowance
+                {
+                    //check how many of this combo item are purchased already for this session.
+                    //return this number.
+                    int numberOfComboItemsAlreadySold = CountNumberOfComboItemsSoldForSession(thisSession.KtixSessionId, thisPriceGroupComboItem.KtixComboItemId);
+
+                    return numberOfItemsForSession - numberOfComboItemsAlreadySold;
+                }
+            }
+
+            return 0;
+        }
+
+        public int CountNumberOfComboItemsSoldForSession(long kTixSessionId, Guid kTixComboItemId)
+        {
+            var bookingsq = from r in _context.Ktixbooking
+                            where r.KtixSessionId == kTixSessionId
+                            && r.IsCommitted == true
+                            select r;
+
+            var bookingList = bookingsq.ToList();
+
+            int numberOfItems = 0;
+
+            foreach (var thisBooking in bookingList)
+            {
+                numberOfItems += GetQuantityOfComboItemInBooking(thisBooking.KtixBookingId, kTixComboItemId);
+            }
+
+            return numberOfItems;
+        }
+
+        public int GetQuantityOfComboItemInBooking(Guid kTixBookingId, Guid kTixComboItemId)
+        {
+            var result = from o in _context.Ktixbookingcomboitems
+                         where o.KtixBookingId == kTixBookingId &&
+                               o.KtixPriceGroupComboItem.KtixComboItemId == kTixComboItemId
+                         select o;
+            return result.Count();
+        }
+
+
+        public IList<Ktixcomboitemsaleitems> GetComboSaleItems(Guid kTixComboItemId)
+        {
+            var query = from o in _context.Ktixcomboitemsaleitems
+                        where o.KtixComboItemId == kTixComboItemId
+                        select o;
+            var result = query.ToList();
+
+            return result;
+        }
+
+        public int CountNumberOfTicketsInComboItem(Guid kTixComboItemId)
+        {
+            int numberOfTickets = 0;
+            IList<Ktixcomboitemsaleitems> comboSaleItemList = GetSaleItems(kTixComboItemId);
+
+            foreach (var thisComboSaleItem in comboSaleItemList)
+            {
+                var thisSaleItem = getObjectById(thisComboSaleItem.KtixSaleItemId);
+                if (thisSaleItem.IsTicket == true)
+                {
+                    numberOfTickets += thisComboSaleItem.Quantity;
+                }
+            }
+
+            return numberOfTickets;
+        }
+
+
+        public Ktixsaleitem getObjectById(Guid KtixSaleItemId)
+        {
+            var q = from o in _context.Ktixsaleitem
+                         where o.KtixSaleItemId == KtixSaleItemId
+                    select o;
+            var result = q.FirstOrDefault();
+
+            return result;
+
+        }
+        public IList<Ktixcomboitemsaleitems> GetSaleItems(Guid kTixComboItemId)
+        {
+            var result = from o in _context.Ktixcomboitemsaleitems
+                         where o.KtixComboItemId == kTixComboItemId
+                         select o;
+            return result.ToList();
+        }
+
         public IList<Ktixsaleitem> GetAllItems(Guid kTixBookingId)
         {
             var saleitemq = from o in _context.Ktixbookingsaleitems
-                             where o.KtixBookingId == kTixBookingId
-                             select o;
+                            where o.KtixBookingId == kTixBookingId
+                            select o;
             var bookingSaleItemList = saleitemq.ToList();
 
             var combosaleitemq = from o in _context.Ktixbookingcomboitems
-                            where o.KtixBookingId == kTixBookingId
-                            select o;
+                                 where o.KtixBookingId == kTixBookingId
+                                 select o;
             var comboItemList = combosaleitemq.ToList();
 
             IList<Ktixsaleitem> saleItemList = new List<Ktixsaleitem>();
@@ -1843,8 +2255,8 @@ namespace KICSAPIServer.Controllers
             foreach (var item in comboItemList)
             {
                 var ci = from o in _context.Ktixcomboitemsaleitems
-                             where o.KtixComboItemId == item.KtixPriceGroupComboItem.KtixComboItemId
-                             select o;
+                         where o.KtixComboItemId == item.KtixPriceGroupComboItem.KtixComboItemId
+                         select o;
                 var combosaleitemslist = ci.ToList();
 
                 foreach (var cbItem in combosaleitemslist)
