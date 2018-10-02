@@ -1818,10 +1818,6 @@ namespace KICSAPIServer.Controllers
             }
         }
 
-
-
-
-
         [HttpPost("GetListOfSessionsForBooking")]
         public async Task<IActionResult> GetListOfSessionsForBooking(String ReferenceNumber, Guid KtixSettingId)
         {
@@ -1934,7 +1930,6 @@ namespace KICSAPIServer.Controllers
                 return BadRequest("Booking not found.");
             }
         }
-
 
         [HttpPost("ChangeBooking")]
         public async Task<IActionResult> ChangeBooking(String ReferenceNumber, long newSessionId)
